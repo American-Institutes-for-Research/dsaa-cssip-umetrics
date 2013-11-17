@@ -1,0 +1,5 @@
+# This file will do two things with the end result being the load of all CFDA .CSV files in the given directory
+# 1) For every .CSV file it finds it will make a copy of the CFDA_LoadRaw.sql file with a new name and replace the "XXXfilenameXXX" string with the name of the .CSV file
+# 2) Execute MySQL using the created .SQL file as it's input.
+forfiles /P "z:\raw data\cfda" /m programs-full*.csv /C "powershell -command (Get-Content Z:\Scripts\LoadRaw\CFDA\CFDA_LoadRaw.sql) -replace 'XXXfullfilenameXXX', 'z:\\Raw Data\\CFDA\\\\@fname.csv' -replace 'XXXfilenameXXX', '@fname' | Set-Content Z:\Scripts\LoadRaw\CFDA\\@fname.sql"
+forfiles /P "Z:\Scripts\LoadRaw\CFDA" /m programs-full*.sql /C "powershell -command (Add-Content LoadAllCFDAFiles.cmd 'mysql CFDA -u mysqladmin -pshorplun --host=mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com --execute=\"\"\"source @file\"\"')"

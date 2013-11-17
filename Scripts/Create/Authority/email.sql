@@ -1,0 +1,10 @@
+CREATE TABLE `email` (
+	`EmailID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`RawID` INT(11) UNSIGNED NOT NULL,
+	`Position` INT(11) unsigned not null,
+	`Name` VARCHAR(100) NOT NULL,
+	PRIMARY KEY (EmailID),
+	UNIQUE INDEX `EmailID` (`EmailID`),
+	INDEX `RawID` (`RawID`)
+)
+ENGINE=InnoDB;

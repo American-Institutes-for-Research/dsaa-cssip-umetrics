@@ -1,0 +1,11 @@
+CREATE TABLE `coauthorid10recent` (
+	`CoauthorID10RecentID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`RawID` INT(11) UNSIGNED NOT NULL,
+	`Position` INT(11) UNSIGNED NOT NULL,
+	`Name` VARCHAR(100) NOT NULL,
+	`Count` INT(11) UNSIGNED NOT NULL,
+	PRIMARY KEY (`CoauthorID10RecentID`),
+	UNIQUE INDEX `CoauthorID10RecentID` (`CoauthorID10RecentID`),
+	INDEX `RawID` (`RawID`)
+)
+ENGINE=InnoDB;

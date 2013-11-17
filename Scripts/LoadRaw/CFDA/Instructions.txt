@@ -1,0 +1,7 @@
+
+1. Check the file CreateCommandFileToLoadAllCFDAFiles.cmd. Ensure that the source directory specified in there is correct.
+
+2. Run the CreateCommandFileToLoadAllCFDAFiles.cmd from the PowerShell commandline. This will create a SQL file for each file
+found in the source directory. It will also create another command file to run all those SQL files.
+
+3. Run the LoadAllCFDAFiles.cmd from the PowerShell commandline. This will load all those SQL files that were created.
