@@ -1,6 +1,5 @@
 use UMetrics_GJY;
 
-set AUTOCOMMIT = 0;
 set FOREIGN_KEY_CHECKS = 0;
 set UNIQUE_CHECKS = 0;
 
@@ -48,7 +47,7 @@ ENGINE=InnoDB;
 -- the raw ids from the Authority.Author table.
 start transaction;
 -- This will insert one row into the Person table for each row in the Authority.author table.
-insert into Person () select null from Authority.author /* order by RawID */ /* limit 20000 */;
+insert into Person () select null from Authority.author;
 
 -- Although this says "last", it is actually the first id of the last insert statement, which was a multiple row insert.
 SET @key = LAST_INSERT_ID();  
@@ -60,7 +59,6 @@ SELECT PersonID, RawID, AuthorID, HIndex
 	(
 		SELECT @key + @rn as PersonID, RawID, AuthorID, cast(HIndex as char(100)) HIndex, @rn := @rn + 1
 		FROM (select @rn:=0) x, Authority.author
-		/* order by RawID */ /* limit 20000 */
 	) y;
 
 COMMIT;
@@ -69,36 +67,25 @@ COMMIT;
 -- Add Author_ID to the Attribute table
 insert ignore into Attribute (Attribute)
 	select AuthorID
-		from AuthorityAuthorTemp
-		/* order by RawID */
-		/* limit 20000 */;
-
+		from AuthorityAuthorTemp;
 insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 	select t.PersonID, a.AttributeId, 'AUTHORITY_AUTHOR_ID'
 		from AuthorityAuthorTemp t
 			inner join Attribute a on a.Attribute=t.AuthorID;
-
 	
 -- Add HIndex to the Attribute table
 insert ignore into Attribute (Attribute)
 	select HIndex
-		from AuthorityAuthorTemp
-		/* order by RawID */
-		/* limit 20000 */;
-
+		from AuthorityAuthorTemp;
 insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 	select t.PersonID, a.AttributeId, 'HINDEX'
 		from AuthorityAuthorTemp t
 			inner join Attribute a on a.Attribute=t.HIndex;
-
-			
 			
 -- Add EMail to the Attribute table
 insert ignore into Attribute (Attribute)
 	select Name
-		from Authority.email
-		/* order by RawID */
-		/* limit 20000 */;
+		from Authority.email;
 
 insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 	select t.PersonID, a.AttributeId, 'EMAIL'
@@ -122,9 +109,7 @@ insert into PersonName
 )
 	select t.PersonID, 'PRIMARY', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
 		from AuthorityAuthorTemp t
-			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing
-			/* order by n.RawID */
-			/* limit 20000 */;
+			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing;
 
 	
 -- Add Names to the PersonName table - alias's now
@@ -142,32 +127,60 @@ insert into PersonName
 )
 	select t.PersonID, 'ALIAS', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
 		from AuthorityAuthorTemp t
-			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position<>0
-			/* limit 20000 */;
-
-
+			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position<>0;
 
 
 -- ---------------------------------------------------------------------------------------------------
 -- Add Publications
 -- ---------------------------------------------------------------------------------------------------
+drop table if exists AuthorityPublicationTemp;
+CREATE temporary TABLE `AuthorityPublicationTemp` (
+	`PublicationId` int(11) UNSIGNED NOT NULL,
+	`PMID` int(11) UNSIGNED NULL DEFAULT NULL,
+	PRIMARY KEY (`PublicationId`),
+	INDEX `PMID` (`PMID`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
 
-insert into Publication(PMID)
-	select distinct ani.PMID from Authority.authornameinstance ani
-		where ani.PMID not in (select PMID from Publication where PMID is not null)
-		/* limit 20000 */;
+-- Need to insert rows into the UMetrics.Publication table, get those inserted ids back, and link them to
+-- the PMIDs from the Authority.authornameinstance table.
+start transaction;
+-- This will insert one row into the Publication table for each unique PMID in the Authority.authornameinstance table.
+insert into Publication (Year) select null from (select distinct PMID from Authority.authornameinstance) X;
+#159.776 sec 18574246 row(s) affected Records: 18574246  Duplicates: 0  Warnings: 0
 
---
+-- Although this says "last", it is actually the first id of the last insert statement, which was a multiple row insert.
+SET @key = LAST_INSERT_ID();  
+-- This will insert into AuthorityPublicationTemp one row for each row in the Authority.authornameinstance table combining it with the PublicationId from the Publication table.
+-- It uses the last insert id and increments it by one for each row.
+INSERT INTO AuthorityPublicationTemp (PublicationId, PMID)
+SELECT PublicationId, PMID
+	FROM
+	(
+		SELECT @key + @rn as PublicationId, PMID, @rn := @rn + 1
+		FROM (select @rn:=0) x, (select distinct PMID from Authority.authornameinstance) y
+	) z;
+COMMIT;
+
+-- Add PMID to Attribute
+insert ignore into Attribute (Attribute)
+	select PMID from AuthorityPublicationTemp
+		where PMID is not null;
+insert into PublicationAttribute (PublicationId, AttributeId, RelationshipCode)
+	select t.PublicationId, a.AttributeId, 'PMID'
+		from AuthorityPublicationTemp t
+			inner join Attribute a on a.Attribute=cast(t.PMID as char(100));
+
+			--
 -- Add PersonPublication relationships to represent what is in authornameinstance
 --
 insert into PersonPublication (PersonId, PublicationId, RelationshipCode)
-	select  aat.PersonId, p.PublicationId, 'AUTHOR'
+	select  aat.PersonId, pa.PublicationId, 'AUTHOR'
 		from AuthorityAuthorTemp aat
 			inner join Authority.authornameinstance ani on ani.RawID=aat.AuthorityRawId
-			inner join Publication p on p.PMID=ani.PMID
-			/* limit 20000 */;
-
-
+			inner join Attribute a on a.Attribute=cast(ani.PMID as char(100))
+			inner join PublicationAttribute pa on pa.AttributeId=a.AttributeId and pa.RelationshipCode='PMID';
 
 -- ---------------------------------------------------------------------------------------------------
 -- Add Terms (journal, affiliation, MeSH, and title words)
@@ -175,14 +188,14 @@ insert into PersonPublication (PersonId, PublicationId, RelationshipCode)
 -- Need to insert rows into the UMetrics.Term table, get those inserted ids back, and link them to
 -- the terms from the Authority.meshterm, affiliation, and titleword tables.
 -- This will insert one row into the Term table for each term in the Authority database.
-insert into Term (Term) select distinct Name from Authority.meshterm /* limit 20000 */;
+insert into Term (Term) select distinct Name from Authority.meshterm ;
 --  insert ignore into Term (Term) select Name from 
 --	(
---		select Name from Authority.meshterm /* limit 20000 */
+--		select Name from Authority.meshterm 
 --		union 
---		select Name from Authority.affiliation /* limit 20000 */
+--		select Name from Authority.affiliation 
 --		union
---		select Name from Authority.titleword /* limit 20000 */
+--		select Name from Authority.titleword 
 --	) x;
 
 -- This query takes a very long time and I can't figure out why.
@@ -221,7 +234,7 @@ ENGINE=InnoDB;
 start transaction;
 -- This will insert one row into the GrantAward table for each grant number in the Authority database.
 insert into GrantAward (Title) select null from 
-	(select distinct Name from Authority.grantid where Name is not null /* limit 20000 */) x;
+	(select distinct Name from Authority.grantid where Name is not null ) x;
 
 -- Although this says "last", it is actually the first id of the last insert statement, which was a multiple row insert.
 SET @key = LAST_INSERT_ID();  
@@ -233,8 +246,7 @@ SELECT GrantAwardId, Name
 	(
 		SELECT @key + @rn as GrantAwardId, Name, @rn := @rn + 1
 		FROM (select @rn:=0) x, 
-			(select distinct Name from Authority.grantid where Name is not null /* limit 20000 */) y
-		/* order by Name */
+			(select distinct Name from Authority.grantid where Name is not null ) y
 	) z;
 
 COMMIT;
@@ -242,8 +254,7 @@ COMMIT;
 -- Insert any grant numbers/Ids that do not currently exist in Attribute
 insert ignore into Attribute (Attribute)
 	select Name
-		from Authority.grantid g
-		/* limit 20000 */;
+		from Authority.grantid g;
 
 insert into GrantAwardAttribute (GrantAwardId, AttributeId, RelationshipCode)
 	select t.GrantAwardId, a.AttributeId, 'GRANTIDENTIFIER'
@@ -262,12 +273,8 @@ insert ignore into PersonGrantAward (PersonId, GrantAwardId, RelationshipCode)
 			inner join Attribute a1 on a1.Attribute=aa.AuthorID
 			inner join PersonAttribute pa on pa.AttributeId=a1.AttributeId and pa.RelationshipCode='AUTHORITY_AUTHOR_ID'
 			inner join Attribute a2 on a2.Attribute=ag.Name
-			inner join GrantAwardAttribute gaa on gaa.AttributeId=a2.AttributeId and gaa.RelationshipCode='GRANTIDENTIFIER'
-			/* order by ag.RawID */
-			/* limit 20000 */;
+			inner join GrantAwardAttribute gaa on gaa.AttributeId=a2.AttributeId and gaa.RelationshipCode='GRANTIDENTIFIER';
 
 
-
-set AUTOCOMMIT = 1;
 set FOREIGN_KEY_CHECKS = 1;
 set UNIQUE_CHECKS = 1;
