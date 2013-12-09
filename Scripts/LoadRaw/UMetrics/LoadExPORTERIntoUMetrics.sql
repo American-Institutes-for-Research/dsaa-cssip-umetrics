@@ -1,0 +1,1224 @@
+#### WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING ####
+#### WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING ####
+####                                                                         ####
+####     DO NOT RUN THIS SCRIPT AGAINST A POPULATED UMETRICS DATABASE!!!     ####
+####                                                                         ####
+#### This script was written to function in a vacuum.  Since its creation,   ####
+#### other data sources have been added to the UMetrics database.  Running   ####
+#### this script against a populated database will cause irrepairable harm!  ####
+####                                                                         ####
+#### As time permits, a new version of this script will be crafted to        ####
+#### address this issue.                                                     ####
+####                                                                         ####
+#### Thank you for your cooperation.                                         ####
+####                                                                         ####
+#### WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING ####
+#### WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING ####
+
+
+
+set AUTOCOMMIT = 0;
+set FOREIGN_KEY_CHECKS = 0;
+set UNIQUE_CHECKS = 0;
+
+
+
+truncate table UMetrics.Address;
+truncate table UMetrics.Attribute;
+truncate table UMetrics.GrantAward;
+truncate table UMetrics.GrantAwardAttribute;
+truncate table UMetrics.Organization;
+truncate table UMetrics.OrganizationAddress;
+truncate table UMetrics.OrganizationAttribute;
+truncate table UMetrics.OrganizationGrantAward;
+truncate table UMetrics.OrganizationName;
+truncate table UMetrics.OrganizationOrganization;
+truncate table UMetrics.Person;
+truncate table UMetrics.PersonAddress;
+truncate table UMetrics.PersonAttribute;
+truncate table UMetrics.PersonGrantAward;
+truncate table UMetrics.PersonName;
+
+
+
+drop table if exists UMetrics.temp;
+create temporary table UMetrics.temp
+(
+	`GrantAwardId` int(11) not null auto_increment,
+	`APPLICATION_ID` int(11) not null,
+	primary key (`GrantAwardId`, `APPLICATION_ID`),
+	unique index `AK_temp` (`APPLICATION_ID`, `GrantAwardId`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- Get APPLICATION_ID for every Project that is not a multi (so everything,
+-- including sub-projects, that is not a parent of a set of sub-projects).
+insert into UMetrics.temp
+(
+	APPLICATION_ID
+)
+select
+	APPLICATION_ID
+
+from
+	ExPORTER.Project
+
+where
+	APPLICATION_ID not in
+	(
+		select
+			APPLICATION_ID
+		from
+			ExPORTER.Project
+		where
+			SUBPROJECT_ID is null and
+			FULL_PROJECT_NUM in
+			(
+				select
+					FULL_PROJECT_NUM
+				from
+					ExPORTER.Project
+				where
+					SUBPROJECT_ID is not null
+			)
+	);
+
+
+
+-- Now add the records we just selected to the GrantAward table.
+insert into UMetrics.GrantAward
+(
+	GrantAwardId,
+	EffectiveDate,
+	StartDate,
+	ExpirationDate,
+	Amount,
+	EstimatedAmount,
+	ARRAAmount,
+	Title
+)
+
+select
+	T.GrantAwardId,
+	P.AWARD_NOTICE_DATE,
+	P.BUDGET_START,
+	P.BUDGET_END,
+	coalesce(P.TOTAL_COST_SUB_PROJECT, P.TOTAL_COST),
+	null,
+	if(P.ARRA_FUNDED = 1, coalesce(P.TOTAL_COST_SUB_PROJECT, P.TOTAL_COST), 0),
+	P.PROJECT_TITLE
+
+from
+	ExPORTER.Project P
+
+	inner join UMetrics.temp T on
+	T.APPLICATION_ID = P.APPLICATION_ID;
+
+
+
+-- Add APPLICATION_IDs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select
+	APPLICATION_ID
+
+from
+	UMetrics.temp;
+
+
+
+-- Link APPLICATION_IDs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	ga.GrantAwardId,
+	a.AttributeId,
+	'NIH_APPLICATION_ID'
+
+from
+	UMetrics.GrantAward ga
+
+	inner join UMetrics.temp t on
+	t.GrantAwardId = ga.GrantAwardId
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = t.APPLICATION_ID;
+
+
+
+-- Add CORE_PROJECT_NUMs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.CORE_PROJECT_NUM
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.CORE_PROJECT_NUM is not null and
+	p.CORE_PROJECT_NUM != '';
+
+
+
+-- Link CORE_PROJECT_NUMs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	t.GrantAwardId,
+	a.AttributeId,
+	'NIH_CORE_PROJECT_NUM'
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = p.CORE_PROJECT_NUM;
+
+
+
+-- Add FULL_PROJECT_NUMs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.FULL_PROJECT_NUM
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.FULL_PROJECT_NUM is not null and
+	p.FULL_PROJECT_NUM != '' and
+	p.FULL_PROJECT_NUM not in
+	(
+		select Attribute from UMetrics.Attribute
+	);
+
+
+
+-- Link FULL_PROJECT_NUMs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	t.GrantAwardId,
+	a.AttributeId,
+	'NIH_FULL_PROJECT_NUM'
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = p.FULL_PROJECT_NUM;
+
+
+
+-- Add NIH_SUBPROJECT_IDs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.SUBPROJECT_ID
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.SUBPROJECT_ID is not null and
+	cast(p.SUBPROJECT_ID as char(100)) not in
+	(
+		select Attribute from UMetrics.Attribute
+	);
+
+
+
+-- Link NIH_SUBPROJECT_IDs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	t.GrantAwardId,
+	a.AttributeId,
+	'NIH_SUBPROJECT_ID'
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = cast(p.SUBPROJECT_ID as char(100));
+
+
+
+-- Add CFDA_CODEs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.CFDA_CODE
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.CFDA_CODE is not null and
+	p.CFDA_CODE != '' and
+	p.CFDA_CODE not in
+	(
+		select Attribute from UMetrics.Attribute
+	);
+
+
+
+-- Link CFDA_CODEs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	t.GrantAwardId,
+	a.AttributeId,
+	'CFDA_CODE'
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = p.CFDA_CODE;
+
+
+
+-- Add FOA_NUMBERs to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.FOA_NUMBER
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.FOA_NUMBER is not null and
+	p.FOA_NUMBER != '' and
+	p.FOA_NUMBER not in
+	(
+		select Attribute from UMetrics.Attribute
+	);
+
+
+
+-- Link FOA_NUMBERs back to the GrantAward.
+insert into UMetrics.GrantAwardAttribute
+(
+	GrantAwardId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	t.GrantAwardId,
+	a.AttributeId,
+	'FOA_CODE'
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = p.FOA_NUMBER;
+
+
+
+drop table if exists UMetrics.temp_org;
+create temporary table UMetrics.temp_org
+(
+	`OrganizationId` int(11) not null auto_increment,
+	`OrganizationName` varchar(100) not null,
+	primary key (`OrganizationId`),
+	unique index `AK_temp_org` (`OrganizationName`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- Get IC_NAME for every Project that is not a multi (so everything,
+-- including sub-projects, that is not a parent of a set of sub-projects).
+insert into
+	UMetrics.temp_org
+	(
+		OrganizationName
+	)
+
+select distinct
+	IC_NAME
+
+from
+	UMetrics.temp t
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.IC_NAME is not null and
+	p.IC_NAME != '';
+
+
+
+-- For whatever reason, in MySQL, you cannot join to a temp table more than once
+-- so we're going to just duplicate the temp_org table for expediency.
+drop table if exists UMetrics.temp_org2;
+create temporary table UMetrics.temp_org2 like UMetrics.temp_org;
+insert into UMetrics.temp_org2 select * from UMetrics.temp_org;
+
+
+
+-- Get ORG_NAME for every Project that is not a multi (so everything,
+-- including sub-projects, that is not a parent of a set of sub-projects).
+insert into
+	UMetrics.temp_org
+	(
+		OrganizationName
+	)
+
+select distinct
+	concat(org_name, ifnull(concat(' ', nullif(org_dept, 'none')), ''))
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.ORG_NAME is not null and
+	p.ORG_NAME != '' and
+	p.ORG_NAME not in
+	(
+		select OrganizationName from UMetrics.temp_org2
+	);
+
+
+
+-- Right now, all we have is an Organization name, so our temp OrganizationIds will
+-- become our Organization.OrganizationIds.  Don't panic!  I'm an expert.
+-- Create Organizations from our temp table.
+insert into UMetrics.Organization
+(
+	OrganizationId
+)
+
+select
+	OrganizationId
+
+from
+	UMetrics.temp_org;
+
+
+
+-- Now add our OrganizationNames.
+insert into UMetrics.OrganizationName
+(
+	OrganizationId,
+	RelationshipCode,
+	Name
+)
+
+select
+	OrganizationId,
+	'PRIMARY_FULL',
+	OrganizationName
+
+from
+	UMetrics.temp_org;
+
+
+
+-- Link our GrantAwards to our IC_NAME Organizations.
+insert into UMetrics.OrganizationGrantAward
+(
+	OrganizationId,
+	GrantAwardId,
+	RelationshipCode
+)
+
+select distinct
+	tt.OrganizationId,
+	t.GrantAwardId,
+	'GRANTOR'
+
+from
+	UMetrics.temp_org tt
+
+	inner join ExPORTER.Project p on
+	p.IC_NAME = tt.OrganizationName
+
+	inner join UMetrics.temp t on
+	t.APPLICATION_ID = p.APPLICATION_ID;
+
+
+
+-- Link our GrantAwards to our ORG_NAME Organizations.
+insert into UMetrics.OrganizationGrantAward
+(
+	OrganizationId,
+	GrantAwardId,
+	RelationshipCode
+)
+
+select distinct
+	tt.OrganizationId,
+	t.GrantAwardId,
+	'AWARDEE'
+
+from
+	UMetrics.temp_org tt
+
+	inner join ExPORTER.Project p on
+	concat(org_name, ifnull(concat(' ', nullif(org_dept, 'none')), '')) = tt.OrganizationName
+
+	inner join UMetrics.temp t on
+	t.APPLICATION_ID = p.APPLICATION_ID;
+
+
+
+-- Since NIH is the only funder currently in ExPORTER, let's manually
+-- add NIH to the Organization table so we can link it to the ICs.
+insert into	UMetrics.Organization (OrganizationId) values (null);
+set @nihOrganizationId = last_insert_id();
+
+
+
+-- Add some names for NIH.
+insert into UMetrics.OrganizationName
+(
+	OrganizationId,
+	RelationshipCode,
+	Name
+)
+values
+(
+	@nihOrganizationId,
+	'PRIMARY_FULL',
+	'National Institutes of Health'
+),
+(
+	@nihOrganizationId,
+	'PRIMARY_ACRONYM',
+	'NIH'
+),
+(
+	@nihOrganizationId,
+	'ALIAS',
+	'Natl. Inst. of Health'
+),
+(
+	@nihOrganizationId,
+	'ALIAS',
+	'The National Institutes of Health'
+);
+
+
+
+-- Let's add an address for NIH.
+insert into UMetrics.Address
+(
+	Street1,
+	Street2,
+	City,
+	CountyEquivalent,
+	StateEquivalent,
+	PostalCode,
+	CountryName
+)
+values
+(
+	'9000 Rockville Pike',
+	null,
+	'Bethesda',
+	'Montgomery',
+	'MD',
+	'20892',
+	'United States of America'
+);
+set @nihAddressId = last_insert_id();
+
+
+
+insert into UMetrics.OrganizationAddress
+(
+	OrganizationId,
+	AddressId,
+	RelationshipCode
+)
+values
+(
+	@nihOrganizationId,
+	@nihAddressId,
+	'PRIMARY'
+);
+
+
+
+-- Now make NIH the parent of all the GRANTOR institutions.
+insert into UMetrics.OrganizationOrganization
+(
+	OrganizationAId,
+	OrganizationBId,
+	RelationshipCode
+)
+
+select distinct
+	@nihOrganizationId,
+	OrganizationId,
+	'PARENT'
+	
+from
+	UMetrics.OrganizationGrantAward
+
+where
+	RelationshipCode = 'GRANTOR';
+
+
+
+-- Add ORG addresses.
+insert into UMetrics.Address
+(
+	City,
+	StateEquivalent,
+	PostalCode,
+	CountryName
+)
+
+select distinct
+	nullif(p.ORG_CITY, ''),
+	nullif(p.ORG_STATE, ''),
+	nullif(p.ORG_ZIPCODE, ''),
+	nullif(p.ORG_COUNTRY, '')
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	(p.ORG_CITY is not null and
+	p.ORG_CITY != '') or
+	(p.ORG_STATE is not null and
+	p.ORG_STATE != '') or
+	(p.ORG_ZIPCODE is not null and
+	p.ORG_ZIPCODE != '') or
+	(p.ORG_COUNTRY is not null and
+	p.ORG_COUNTRY != '');
+
+
+
+drop table if exists UMetrics.temp_umetrics_address;
+create temporary table UMetrics.temp_umetrics_address
+(
+	`AddressId` int(11) not null,
+	`City` varchar(100) not null default '',
+	`StateEquivalent` varchar(100) not null default '',
+	`PostalCode` varchar(100) not null default '',
+	`CountryName` varchar(100) not null default '',
+	primary key (`AddressId`),
+	index `IX_temp_umetrics_address` (`City`, `StateEquivalent`, `PostalCode`, `CountryName`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+insert into UMetrics.temp_umetrics_address
+(
+	AddressId,
+	City,
+	StateEquivalent,
+	PostalCode,
+	CountryName
+)
+
+select
+	a.AddressId,
+	ifnull(a.City, ''),
+	ifnull(a.StateEquivalent, ''),
+	ifnull(a.PostalCode, ''),
+	ifnull(a.CountryName, '')
+
+from
+	UMetrics.Address a;
+
+
+
+drop table if exists UMetrics.temp_exporter_address;
+create temporary table UMetrics.temp_exporter_address
+(
+	`APPLICATION_ID` int(11) not null,
+	`City` varchar(100) not null default '',
+	`StateEquivalent` varchar(100) not null default '',
+	`PostalCode` varchar(100) not null default '',
+	`CountryName` varchar(100) not null default '',
+	primary key (`APPLICATION_ID`),
+	index `IX_temp_exporter_address` (`City`, `StateEquivalent`, `PostalCode`, `CountryName`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+insert into UMetrics.temp_exporter_address
+(
+	APPLICATION_ID,
+	City,
+	StateEquivalent,
+	PostalCode,
+	CountryName
+)
+
+select
+	p.APPLICATION_ID,
+	ifnull(p.ORG_CITY, ''),
+	ifnull(p.ORG_STATE, ''),
+	ifnull(p.ORG_ZIPCODE, ''),
+	ifnull(p.ORG_COUNTRY, '')
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	(p.ORG_CITY is not null and
+	p.ORG_CITY != '') or
+	(p.ORG_STATE is not null and
+	p.ORG_STATE != '') or
+	(p.ORG_ZIPCODE is not null and
+	p.ORG_ZIPCODE != '') or
+	(p.ORG_COUNTRY is not null and
+	p.ORG_COUNTRY != '');
+
+
+
+-- Link these addresses back to the Organizations.
+insert into UMetrics.OrganizationAddress
+(
+	OrganizationId,
+	AddressId,
+	RelationshipCode
+)
+
+select distinct
+	oga.OrganizationId,
+	tua.AddressId,
+	'PRIMARY'
+
+from
+	UMetrics.temp_umetrics_address tua
+
+	inner join UMetrics.temp_exporter_address tea on
+	tea.City = tua.City and
+	tea.StateEquivalent = tua.StateEquivalent and
+	tea.PostalCode = tua.PostalCode and
+	tea.CountryName = tua.CountryName
+
+	inner join UMetrics.temp t on
+	t.APPLICATION_ID = tea.APPLICATION_ID
+
+	inner join UMetrics.OrganizationGrantAward oga on
+	oga.GrantAwardId = t.GrantAwardId and
+	oga.RelationshipCode = 'AWARDEE';
+
+
+
+drop table if exists UMetrics.temp_duns;
+create temporary table UMetrics.temp_duns
+(
+	`OrganizationId` int(11) not null auto_increment,
+	`OrganizationName` varchar(100) not null,
+	primary key (`OrganizationId`),
+	unique index `AK_temp_duns` (`OrganizationName`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- Add ORG_DUNS to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	p.ORG_DUNS
+
+from
+	UMetrics.temp t
+
+	inner join ExPORTER.Project p on
+	p.APPLICATION_ID = t.APPLICATION_ID
+
+where
+	p.ORG_DUNS is not null and
+	p.ORG_DUNS != '';
+
+
+
+-- Link ORG_DUNS back to the Organization.
+insert into UMetrics.OrganizationAttribute
+(
+	OrganizationId,
+	AttributeId,
+	RelationshipCode
+)
+
+select distinct
+	tt.OrganizationId,
+	a.AttributeId,
+	'DUNS'
+
+from
+	UMetrics.temp_org tt
+
+	inner join ExPORTER.Project p on
+	concat(org_name, ifnull(concat(' ', nullif(org_dept, 'none')), '')) = tt.OrganizationName
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = p.ORG_DUNS;
+
+
+
+-- Ok, this seems weird, but creating this temporary table allows us to split out PI_NAMEs and
+-- PI_IDs.  Look a couple queries down to see this table in use.
+--
+-- P.S.  THIS ONLY WORKS FOR 40 NAMES!  If there are more than 40 names or IDs in the PI_NAMEs or
+-- PI_IDs column, those beyond 40 will be ignored.
+drop table if exists UMetrics.counter;
+CREATE temporary TABLE UMetrics.counter (id int);
+INSERT INTO UMetrics.counter VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14), (15), (16), (17), (18), (19), (20), (21), (22), (23), (24), (25), (26), (27), (28), (29), (30), (31), (32), (33), (34), (35), (36), (37), (38), (39), (40);
+
+
+
+drop table if exists UMetrics.temp_pis;
+create temporary table UMetrics.temp_pis
+(
+	`APPLICATION_ID` int(11) not null,
+	`PIName` varchar(100) not null,
+	`OrdinalPosition` int(11) not null,
+	`Nickname` varchar(100) null,
+	unique index `AK1_temp_pis` (`APPLICATION_ID`, `PIName`, `OrdinalPosition`),
+	unique index `AK2_temp_pis` (`PIName`, `APPLICATION_ID`, `OrdinalPosition`),
+	unique index `AK3_temp_pis` (`APPLICATION_ID`, `OrdinalPosition`, `PIName`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- Split out names from the PI_NAMEs field.  While we're at it, remove meaningless junk such as "(contact)"
+-- and "(interim)".  Also, standardize spaces a bit.  There are also some data corrections (that we know of):
+--   'GEMG;ER-NOWAK, KARLA' should be 'GENGLER-NOWAK, KARLA'
+--   one of the names contains '11/22/2006'
+--
+-- Very little work is done to confirm that PI_IDs and PI_NAMEs match up!!!!!  This is a quick and dirty
+-- solution for the intial load.  Data was checked by hand.  If you run this code again in the future
+-- against different source data, you will need to manually verify that the name and Ids match up!!!!!!
+insert into UMetrics.temp_pis
+(
+	APPLICATION_ID,
+	PIName,
+	OrdinalPosition
+)
+
+select
+	p.APPLICATION_ID,
+	trim(replace(replace(replace(replace(substring_index(substring_index(p.PI_NAMEs, ';', c.id), ';', -1), '   ', ' '), '  ', ' '), '  ', ' '), ' ,', ',')) as PIName,
+	c.id OrdinalPosition
+
+from
+	(
+		select
+			APPLICATION_ID,
+			trim(replace(replace(replace(replace(replace(replace(replace(replace(PI_NAMEs, 'GEMG;ER-NOWAK, KARLA', 'GENGLER-NOWAK, KARLA'), '11/22/2006', ' '), '(contact)', ' '), '(CONTACT)', ' '), '(deceased)', ' '), '(DECEASED)', ' '), '(interim)', ' '), '(INTERIM)', ' ')) as PI_NAMEs
+
+		from
+			ExPORTER.Project
+
+		where
+		  PI_NAMEs is not null and
+		  PI_NAMEs != '' and
+			PI_NAMEs != ';' and
+		  PI_NAMEs != ', ;'
+	) p
+
+	inner join UMetrics.counter c on
+	substring_index(substring_index(p.PI_NAMEs, ';', c.id), ';', -1)
+    <> substring_index(substring_index(p.PI_NAMEs, ';', c.id - 1), ';', -1) and
+  substring_index(substring_index(p.PI_NAMEs, ';', c.id), ';', -1) != '';
+
+
+
+-- Find nicknames.
+update
+	UMetrics.temp_pis
+
+set
+	Nickname = substring_index(substring_index(PIName, ')', 1), '(', -1)
+
+where
+	PIName like '%(%' and
+	PIName like '%)%';
+
+
+
+-- Remove nicknames from the name.
+update
+	UMetrics.temp_pis
+
+set
+	PIName = trim(replace(replace(replace(replace(PIName, concat('(', Nickname, ')'), ' '), '  ', ' '), '  ', ' '), ' ,', ','))
+
+where
+	Nickname is not null;
+
+
+
+drop table if exists UMetrics.temp_pi_ids;
+create temporary table UMetrics.temp_pi_ids
+(
+	`APPLICATION_ID` int(11) not null,
+	`PIId` int(11) not null,
+	`OrdinalPosition` int(11) not null,
+	unique index `AK1_temp_pis` (`APPLICATION_ID`, `PIId`, `OrdinalPosition`),
+	unique index `AK2_temp_pis` (`PIId`, `APPLICATION_ID`, `OrdinalPosition`),
+	unique index `AK3_temp_pis` (`APPLICATION_ID`, `OrdinalPosition`, `PIId`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- Split out Ids from the PI_IDs field.  While we're at it, remove meaningless junk such as "(contact)"
+-- and "(interim)".  Also, standardize spaces a bit.
+insert into UMetrics.temp_pi_ids
+(
+	APPLICATION_ID,
+	PIId,
+	OrdinalPosition
+)
+
+select
+	p.APPLICATION_ID,
+	trim(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(substring_index(substring_index(p.PI_IDs, ';', c.id), ';', -1), '(contact)', ' '), '(CONTACT)', ' '), '(deceased)', ' '), '(DECEASED)', ' '), '(interim)', ' '), '(INTERIM)', ' '), '   ', ' '), '  ', ' '), '  ', ' '), ' ,', ',')) as PIId,
+	c.id OrdinalPosition
+
+from
+	ExPORTER.Project p
+
+	inner join UMetrics.counter c on
+  p.PI_IDs is not null and
+  p.PI_IDs != '' and
+  p.PI_IDs != ';' and
+  p.PI_IDs != ', ;' and
+	substring_index(substring_index(p.PI_IDs, ';', c.id), ';', -1)
+    <> substring_index(substring_index(p.PI_IDs, ';', c.id - 1), ';', -1) and
+  substring_index(substring_index(p.PI_IDs, ';', c.id), ';', -1) != '';
+
+
+
+drop table if exists UMetrics.temp_pi_names_and_ids;
+create temporary table UMetrics.temp_pi_names_and_ids
+(
+	`APPLICATION_ID` int(11) not null,
+	`PIName` varchar(100) not null,
+	`PIId` int(11) not null,
+	`OrdinalPosition` int not null,
+	`Nickname` varchar(100) null,
+	unique index `AK1_temp_pi_names_and_ids` (`APPLICATION_ID`, `PIName`, `PIId`, `OrdinalPosition`),
+	unique index `AK2_temp_pi_names_and_ids` (`APPLICATION_ID`, `PIId`, `PIName`, `OrdinalPosition`),
+	unique index `AK3_temp_pi_names_and_ids` (`PIName`, `PIId`, `APPLICATION_ID`, `OrdinalPosition`),
+	unique index `AK4_temp_pi_names_and_ids` (`PIId`, `PIName`, `APPLICATION_ID`, `OrdinalPosition`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+insert into UMetrics.temp_pi_names_and_ids
+(
+	APPLICATION_ID,
+	PIName,
+	PIId,
+	OrdinalPosition,
+	Nickname
+)
+
+select
+	a.APPLICATION_ID,
+	a.PIName,
+	b.PIId,
+	a.OrdinalPosition,
+	a.Nickname
+
+from
+	UMetrics.temp_pis a
+
+	inner join UMetrics.temp_pi_ids b on
+	b.APPLICATION_ID = a.APPLICATION_ID and
+	b.OrdinalPosition = a.OrdinalPosition
+
+where
+	a.PIName is not null and
+	a.PIName != '' and
+	a.PIName != ',';
+
+
+
+drop table if exists UMetrics.temp_person;
+create temporary table UMetrics.temp_person
+(
+	`PersonId` int(11) not null AUTO_INCREMENT,
+	`PIName` varchar(100) not null,
+	`PIId` int(11) not null,
+	`Nickname` varchar(100) null,
+	primary key (PersonId),
+	unique index `AK1_temp_person` (`PIName`, `PIId`, `Nickname`),
+	unique index `AK2_temp_person` (`PIId`, `PIName`, `Nickname`)
+)
+collate='utf8_general_ci'
+engine=InnoDB;
+
+
+
+-- I hate to do this, but for this version of the bulk load, we're going to treat
+-- every variation of PIName/PIId as a new "person".  This will hopefully be cleaned
+-- up by the as-yet-to-be-written "person engine/crawler".
+insert into UMetrics.temp_person
+(
+	PIName,
+	PIId,
+	Nickname
+)
+
+select distinct
+	PIName,
+	PIId,
+	Nickname
+
+from
+	UMetrics.temp_pi_names_and_ids;
+
+
+
+-- Add our temporary persons to the Person table.
+insert into UMetrics.Person
+(
+	PersonId
+)
+
+select
+	PersonId
+
+from
+	UMetrics.temp_person;
+
+
+
+-- Add our temporary person names to the PersonName table.
+insert into UMetrics.PersonName
+(
+	PersonNameId,
+	PersonId,
+	RelationshipCode,
+	FullName,
+	Prefix,
+	GivenName,
+	OtherName,
+	FamilyName,
+	Suffix,
+	Nickname
+)
+
+select
+	PersonId,
+	PersonId,
+	'PRIMARY',
+	PIName,
+	null,
+	null,
+	null,
+	null,
+	null,
+	Nickname
+
+from
+	UMetrics.temp_person;
+
+
+
+-- Add PI Ids to the Attribute table.
+insert into UMetrics.Attribute
+(
+	Attribute
+)
+
+select distinct
+	PIId
+
+from
+	UMetrics.temp_person
+
+where
+	cast(PIId as char(100)) not in
+	(
+		select Attribute from UMetrics.Attribute
+	);
+
+
+
+-- Link PI Ids from the Attribute table to the Person table.
+insert into UMetrics.PersonAttribute
+(
+	PersonId,
+	AttributeId,
+	RelationshipCode
+)
+
+select
+	tp.PersonId,
+	a.AttributeId,
+	'NIH_PI_ID'
+
+from
+	UMetrics.temp_person tp
+
+	inner join UMetrics.Attribute a on
+	a.Attribute = cast(tp.PIId as char(11));
+
+
+
+-- Link Persons back to the appropriate GrantAward.
+insert into UMetrics.PersonGrantAward
+(
+	`PersonId`,
+	`GrantAwardId`,
+	`RelationshipCode`
+)
+
+select distinct
+	tp.PersonId,
+	gaa.GrantAwardId,
+	'PI'
+
+from
+	UMetrics.temp_person tp
+
+	inner join UMetrics.temp_pi_names_and_ids tpnai on
+	tpnai.PIId = tp.PIId
+
+	inner join UMetrics.Attribute a1 on
+	a1.Attribute = cast(tpnai.PIId as char(100))
+
+	inner join UMetrics.PersonAttribute pa on
+	pa.AttributeId = a1.AttributeId and
+	pa.RelationshipCode = 'NIH_PI_ID'
+
+	inner join UMetrics.Attribute a2 on
+	a2.Attribute = cast(tpnai.APPLICATION_ID as char(100))
+
+	inner join UMetrics.GrantAwardAttribute gaa on
+	gaa.AttributeId = a2.AttributeId and
+	gaa.RelationshipCode = 'NIH_APPLICATION_ID';
+
+
+
+optimize table UMetrics.Address;
+optimize table UMetrics.Attribute;
+optimize table UMetrics.GrantAward;
+optimize table UMetrics.GrantAwardAttribute;
+optimize table UMetrics.Organization;
+optimize table UMetrics.OrganizationAddress;
+optimize table UMetrics.OrganizationAttribute;
+optimize table UMetrics.OrganizationGrantAward;
+optimize table UMetrics.OrganizationName;
+optimize table UMetrics.OrganizationOrganization;
+optimize table UMetrics.Person;
+optimize table UMetrics.PersonAddress;
+optimize table UMetrics.PersonAttribute;
+optimize table UMetrics.PersonGrantAward;
+optimize table UMetrics.PersonName;
+
+
+
+set AUTOCOMMIT = 1;
+set FOREIGN_KEY_CHECKS = 1;
+set UNIQUE_CHECKS = 1;
