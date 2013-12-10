@@ -1201,6 +1201,163 @@ from
 
 
 
+drop table if exists UMetrics.temp_missing_org_names;
+create table UMetrics.temp_missing_org_names
+(
+	OrganizationId int unsigned not null auto_increment,
+	Name varchar(200) not null,
+	primary key (OrganizationId),
+	unique index `ak_temp_missing_org_names` (Name)
+)
+engine InnoDB;
+
+
+
+-- So we can continue where Organization.OrganizationId leaves off.
+insert into UMetrics.temp_missing_org_names
+(
+	OrganizationId,
+	Name
+)
+
+select
+	max(OrganizationId),
+	'XXX QQQ BOGUS DELETE ME QQQ XXX'
+
+from
+	UMetrics.Organization;
+
+
+
+-- Add names we don't already know about.
+insert into UMetrics.temp_missing_org_names
+(
+	Name
+)
+
+select distinct
+	p.ORG_NAME
+
+from
+	ExPORTER.Project p
+
+	left outer join UMetrics.OrganizationName onn on
+	onn.Name = p.ORG_NAME
+
+where
+	onn.Name is null and
+	p.ORG_NAME is not null and
+	p.ORG_NAME != '';
+
+
+
+-- Delete the bogus name so it doesn't cause problems later.
+delete from
+	UMetrics.temp_missing_org_names
+
+where
+	Name = 'XXX QQQ BOGUS DELETE ME QQQ XXX';
+
+
+
+-- We need to add the Organization first.
+insert into UMetrics.Organization
+(
+	OrganizationId
+)
+
+select
+	OrganizationId
+
+from
+	UMetrics.temp_missing_org_names;
+
+
+
+-- Now add the OrganizationName.
+insert into UMetrics.OrganizationName
+(
+	OrganizationId,
+	RelationshipCode,
+	Name
+)
+
+select
+	t.OrganizationId,
+	'PRIMARY_FULL',
+	t.Name
+
+from
+	UMetrics.temp_missing_org_names t;
+
+
+
+-- Get rid of the temp table.
+drop table if exists UMetrics.temp_missing_org_names;
+
+
+
+-- We're going to do this as a two step process so we can check the results before committing.
+drop table if exists UMetrics.temp_hierarchy;
+create table UMetrics.temp_hierarchy
+(
+	ParentOrganizationId int unsigned not null,
+	ParentOrganizationName varchar(200) not null,
+	ChildOrganizationId int unsigned not null,
+	ChildOrganizationName varchar(200) not null,
+	primary key (ParentOrganizationId, ChildOrganizationId)
+)
+engine InnoDB;
+
+
+
+-- Now we need to link ORG_DEPT to ORG_NAME so as to create an hierarchy.  NOTE:  How
+-- ORG_NAME and ORG_DEPT are joined MUST MATCH how they were created in the first place
+-- above.
+insert into
+	UMetrics.temp_hierarchy
+
+select distinct
+	onn1.OrganizationId ParentOrganizationId,
+	onn1.Name ParentOrganizationName,
+	onn2.OrganizationId ChildOrganizationId,
+	onn2.Name ChildOrganizationName
+
+from
+	ExPORTER.Project p
+
+	inner join UMetrics.OrganizationName onn1 on
+	onn1.Name = p.ORG_NAME
+
+	inner join UMetrics.OrganizationName onn2 on
+	onn2.Name = concat(p.ORG_NAME, ifnull(concat(' ', nullif(p.ORG_DEPT, 'none')), ''))
+
+where
+	p.ORG_NAME != concat(p.ORG_NAME, ifnull(concat(' ', nullif(p.ORG_DEPT, 'none')), ''));
+
+
+
+insert into UMetrics.OrganizationOrganization
+(
+	OrganizationAId,
+	OrganizationBId,
+	RelationshipCode
+)
+
+select
+	ParentOrganizationId,
+	ChildOrganizationId,
+	'PARENT'
+
+from
+	UMetrics.temp_hierarchy;
+
+
+
+drop table UMetrics.temp_hierarchy;
+
+
+
 optimize table UMetrics.Address;
 optimize table UMetrics.Attribute;
 optimize table UMetrics.GrantAward;
