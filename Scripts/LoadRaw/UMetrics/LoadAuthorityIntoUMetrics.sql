@@ -1,4 +1,4 @@
-use UMetrics_GJY;
+#use UMetrics_GJY;
 
 set FOREIGN_KEY_CHECKS = 0;
 set UNIQUE_CHECKS = 0;
@@ -109,7 +109,8 @@ insert into PersonName
 )
 	select t.PersonID, 'PRIMARY', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
 		from AuthorityAuthorTemp t
-			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing;
+			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing
+			;
 
 	
 -- Add Names to the PersonName table - alias's now
@@ -148,7 +149,6 @@ ENGINE=InnoDB;
 start transaction;
 -- This will insert one row into the Publication table for each unique PMID in the Authority.authornameinstance table.
 insert into Publication (Year) select null from (select distinct PMID from Authority.authornameinstance) X;
-#159.776 sec 18574246 row(s) affected Records: 18574246  Duplicates: 0  Warnings: 0
 
 -- Although this says "last", it is actually the first id of the last insert statement, which was a multiple row insert.
 SET @key = LAST_INSERT_ID();  

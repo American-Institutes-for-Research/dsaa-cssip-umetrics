@@ -110,8 +110,8 @@ insert into CSXAddressTemp (cluster, address)
 			where address is not null and cluster not in (0,1,2);
 
 
-insert ignore into Address (FullAddress)
-	select address
+insert into Address (FullAddress)
+	select distinct address
 		from CSXAddressTemp cta;
 
 SET SQL_SAFE_UPDATES=0;	
@@ -146,7 +146,8 @@ create temporary table CSXUniquePapersTemp
 	id varchar(100) null default null,
 	year int(11) null default null,
 	index cluster (cluster),
-	index id (id)
+	index id (id),
+	primary key (cluster)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
@@ -155,7 +156,8 @@ ENGINE=InnoDB;
 -- the one with the latest crawldate.
 -- After doing a left outer join against itself with the crawldate comparison, the right side will contain nulls when the left side's
 -- crawldate is the latest one.
-insert into CSXUniquePapersTemp (cluster, id, year)
+-- Need to use "ignore" so we only get one  - there may be multiple ids per cluster, and we don't want that - and doesn't matter much which one
+insert ignore into CSXUniquePapersTemp (cluster, id, year)
 	select p1.cluster, p1.id, p1.year
 		from CiteSeerX.papers p1
 			left join CiteSeerX.papers p2 ON (p1.cluster = p2.cluster AND p1.crawlDate < p2.crawlDate)
@@ -204,7 +206,7 @@ insert ignore into PublicationAttribute (PublicationId, AttributeId, Relationshi
 	select t.PublicationId, a.AttributeId, 'TITLE_OTHER'
 		from CSXPublicationTemp t
 			inner join CiteSeerX.papers cp on cp.cluster=t.cluster
-			inner join Attribute a on a.Attribute=cp.title;
+			inner join Attribute a on a.Attribute=left(cp.title,100);
 
 -- Set one of the titles as primary. This will be the one that had the latest crawl date in a cluster. So it is the one
 -- There is a double nesting of selects to avoid a MySQL restriction. See this for an explanation: http://verysimple.com/2011/03/30/mysql-cant-specify-target-table-for-update-in-from-clause/
@@ -220,7 +222,7 @@ update PublicationAttribute
 					inner join CSXPublicationTemp t on t.cluster=cp.cluster
 					inner join PublicationAttribute pa on pa.PublicationId=t.PublicationId and pa.RelationshipCode='TITLE_OTHER'
 					inner join Attribute a on a.AttributeId=pa.AttributeId
-				where a.Attribute=cp.title
+				where a.Attribute=left(cp.title,100)
 			) X
 		);
 SET SQL_SAFE_UPDATES=1;
