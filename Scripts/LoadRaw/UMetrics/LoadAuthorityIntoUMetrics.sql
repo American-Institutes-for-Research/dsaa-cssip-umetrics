@@ -8,7 +8,7 @@
 ################################################################################
 
 
-#use UMetrics_GJY;
+#use UMETRICS_GJY;
 
 set FOREIGN_KEY_CHECKS = 0;
 set UNIQUE_CHECKS = 0;
@@ -53,7 +53,7 @@ CREATE temporary TABLE `AuthorityAuthorTemp` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 
--- Need to insert rows into the UMetrics.Person table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.Person table, get those inserted ids back, and link them to
 -- the raw ids from the Authority.Author table.
 start transaction;
 -- This will insert one row into the Person table for each row in the Authority.author table.
@@ -154,7 +154,7 @@ CREATE temporary TABLE `AuthorityPublicationTemp` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 
--- Need to insert rows into the UMetrics.Publication table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.Publication table, get those inserted ids back, and link them to
 -- the PMIDs from the Authority.authornameinstance table.
 start transaction;
 -- This will insert one row into the Publication table for each unique PMID in the Authority.authornameinstance table.
@@ -195,7 +195,7 @@ insert into PersonPublication (PersonId, PublicationId, RelationshipCode)
 -- ---------------------------------------------------------------------------------------------------
 -- Add Terms (journal, affiliation, MeSH, and title words)
 -- ---------------------------------------------------------------------------------------------------
--- Need to insert rows into the UMetrics.Term table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.Term table, get those inserted ids back, and link them to
 -- the terms from the Authority.meshterm, affiliation, and titleword tables.
 -- This will insert one row into the Term table for each term in the Authority database.
 insert into Term (Term) select distinct Name from Authority.meshterm ;
@@ -239,7 +239,7 @@ CREATE temporary TABLE `AuthorityGrantTemp` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 
--- Need to insert rows into the UMetrics.GrantAward table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.GrantAward table, get those inserted ids back, and link them to
 -- the grant numbers from the Authority.grantid table.
 start transaction;
 -- This will insert one row into the GrantAward table for each grant number in the Authority database.

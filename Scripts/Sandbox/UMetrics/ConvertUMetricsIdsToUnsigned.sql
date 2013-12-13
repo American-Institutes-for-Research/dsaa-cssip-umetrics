@@ -9,7 +9,7 @@
 
 /*
 
-	Some quick and dirty code to convert Ids in UMetrics from SIGNED INTs to UNSIGNED.
+	Some quick and dirty code to convert Ids in UMETRICS from SIGNED INTs to UNSIGNED.
 
 	This code is, obviously, not terribly sophisticated.  It does not dynamically check
 	data types or foreign keys.  Re-run at your own risk.

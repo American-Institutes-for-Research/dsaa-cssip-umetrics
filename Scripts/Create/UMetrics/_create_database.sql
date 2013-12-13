@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMetrics
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICS
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -16,14 +16,14 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `UMetrics`
+-- Current Database: `UMETRICS`
 --
 
-/*!40000 DROP DATABASE IF EXISTS `UMetrics`*/;
+/*!40000 DROP DATABASE IF EXISTS `UMETRICS`*/;
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `UMetrics` /*!40100 DEFAULT CHARACTER SET utf8 */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `UMETRICS` /*!40100 DEFAULT CHARACTER SET utf8 */;
 
-USE `UMetrics`;
+USE `UMETRICS`;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

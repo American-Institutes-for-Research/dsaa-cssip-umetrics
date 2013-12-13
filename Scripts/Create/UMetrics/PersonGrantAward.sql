@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMetrics
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICS
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 

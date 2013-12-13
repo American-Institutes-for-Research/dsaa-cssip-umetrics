@@ -7,7 +7,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
--- use UMetrics_GJY;
+-- use UMETRICS_GJY;
 
 set FOREIGN_KEY_CHECKS = 0;
 set UNIQUE_CHECKS = 0;
@@ -44,7 +44,7 @@ CREATE temporary TABLE `CSXAuthorTemp` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 
--- Need to insert rows into the UMetrics.Person table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.Person table, get those inserted ids back, and link them to
 -- the raw ids from the CiteSeerX.authors table.
 start transaction;
 -- This will insert one row into the Person table for each row in the CiteSeerX.authors table.
@@ -174,7 +174,7 @@ insert ignore into CSXUniquePapersTemp (cluster, id, year)
 		WHERE p2.crawlDate IS NULL and p1.cluster <> 0;
 
 
--- Need to insert rows into the UMetrics.Publication table, get those inserted ids back, and link them to
+-- Need to insert rows into the UMETRICS.Publication table, get those inserted ids back, and link them to
 -- the cluster ids from the CiteSeerX.papers table.
 start transaction;
 -- This will insert one row into the Publication table for each row in the CiteSeerX.papers table.

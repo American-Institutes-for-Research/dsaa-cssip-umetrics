@@ -7,7 +7,7 @@ set _mysqldump_path=C:\Program Files (x86)\MySQL\MySQL Workbench 6.0 CE\
 set _mysql_username=mysqladmin
 set _mysql_password=
 set _mysql_host=mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com
-set _mysql_database=UMetrics
+set _mysql_database=UMETRICS
 
 echo.
 echo This script will dump the structure of the database
