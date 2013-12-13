@@ -24,7 +24,7 @@ CREATE TABLE `PersonAttribute` (
   `PersonAttributeId` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique identifier for an PersonAttribute.',
   `PersonId` int(11) unsigned NOT NULL COMMENT 'Foreign key to the Person.',
   `AttributeId` int(11) unsigned NOT NULL COMMENT 'Foreign key to the Attribute.',
-  `RelationshipCode` enum('AUTHORITY_AUTHOR_ID','CITESEERX_CLUSTER','EMAIL','HINDEX','TELEPHONE','NIH_PI_ID') NOT NULL COMMENT 'Describes the attribute''s relationship to the person.  THESE SHOULD BE STORED IN ALPHABETICAL ORDER AND SHOULD NEVER BE REFERRED TO BY UNDERLYING NUMERIC VALUE, ONLY BY TEXTUAL VALUE AS THE UNDERLYING NUMERIC VALUE WILL CHANGE OVER TIME!',
+  `RelationshipCode` enum('AUTHORITY_AUTHOR_ID','CITESEERX_CLUSTER','EMAIL','TELEPHONE','NIH_PI_ID') NOT NULL COMMENT 'Describes the attribute''s relationship to the person.  THESE SHOULD BE STORED IN ALPHABETICAL ORDER AND SHOULD NEVER BE REFERRED TO BY UNDERLYING NUMERIC VALUE, ONLY BY TEXTUAL VALUE AS THE UNDERLYING NUMERIC VALUE WILL CHANGE OVER TIME!',
   PRIMARY KEY (`PersonAttributeId`),
   UNIQUE KEY `AK_PersonAttribute` (`RelationshipCode`,`PersonId`,`AttributeId`),
   KEY `FK_PersonAttribute_Person` (`PersonId`),

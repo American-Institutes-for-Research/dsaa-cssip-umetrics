@@ -44,11 +44,9 @@ CREATE temporary TABLE `AuthorityAuthorTemp` (
 	`PersonId` int(11) UNSIGNED NOT NULL,
 	`AuthorityRawId` int(11) UNSIGNED NULL DEFAULT NULL,
 	`AuthorID` varchar(100) NULL DEFAULT NULL,
-	`HIndex` varchar(100) NULL DEFAULT NULL,
 	PRIMARY KEY (`PersonId`),
 	INDEX `AuthorityRawId` (`AuthorityRawId`),
 	INDEX `AuthorID` (`AuthorID`),
-	INDEX `HIndex` (`HIndex`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
@@ -63,11 +61,11 @@ insert into Person () select null from Authority.author;
 SET @key = LAST_INSERT_ID();  
 -- This will insert into AuthorityAuthorTemp one row for each row in the Authority.author table combining it with the PersonId from the Person table.
 -- It uses the last insert id and increments it by one for each row.
-INSERT INTO AuthorityAuthorTemp (PersonID, AuthorityRawID, AuthorID, HIndex)
-SELECT PersonID, RawID, AuthorID, HIndex
+INSERT INTO AuthorityAuthorTemp (PersonID, AuthorityRawID, AuthorID)
+SELECT PersonID, RawID, AuthorID
 	FROM
 	(
-		SELECT @key + @rn as PersonID, RawID, AuthorID, cast(HIndex as char(100)) HIndex, @rn := @rn + 1
+		SELECT @key + @rn as PersonID, RawID, AuthorID, @rn := @rn + 1
 		FROM (select @rn:=0) x, Authority.author
 	) y;
 
@@ -83,14 +81,6 @@ insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 		from AuthorityAuthorTemp t
 			inner join Attribute a on a.Attribute=t.AuthorID;
 	
--- Add HIndex to the Attribute table
-insert ignore into Attribute (Attribute)
-	select HIndex
-		from AuthorityAuthorTemp;
-insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
-	select t.PersonID, a.AttributeId, 'HINDEX'
-		from AuthorityAuthorTemp t
-			inner join Attribute a on a.Attribute=t.HIndex;
 			
 -- Add EMail to the Attribute table
 insert ignore into Attribute (Attribute)
