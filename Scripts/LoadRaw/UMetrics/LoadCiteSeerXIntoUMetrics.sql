@@ -70,7 +70,8 @@ insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 insert ignore into Attribute (Attribute)
 	select email
 		from CiteSeerX.authors
-		where email is not null;
+		where email is not null
+			and cluster not in (0, 1, 2);
 
 insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 	select distinct t.PersonID, a.AttributeId, 'EMAIL'
