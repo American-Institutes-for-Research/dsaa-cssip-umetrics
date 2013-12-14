@@ -1,10 +1,10 @@
 CREATE TABLE `probability` (
-	`ProbabilityID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`RawID` INT(11) UNSIGNED NOT NULL,
+	`ProbabilityId` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`RawId` INT(11) UNSIGNED NOT NULL,
 	`Position` INT(11) UNSIGNED NOT NULL,
 	`Probability` float unsigned NOT NULL,
-	PRIMARY KEY (`ProbabilityID`),
-	UNIQUE INDEX `ProbabilityID` (`ProbabilityID`),
-	INDEX `RawID` (`RawID`)
+	PRIMARY KEY (`ProbabilityId`),
+	UNIQUE INDEX `ProbabilityId` (`ProbabilityId`),
+	INDEX `RawId` (`RawId`)
 )
 ENGINE=InnoDB;

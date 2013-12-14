@@ -43,10 +43,10 @@ drop table if exists AuthorityAuthorTemp;
 CREATE temporary TABLE `AuthorityAuthorTemp` (
 	`PersonId` int(11) UNSIGNED NOT NULL,
 	`AuthorityRawId` int(11) UNSIGNED NULL DEFAULT NULL,
-	`AuthorID` varchar(100) NULL DEFAULT NULL,
+	`AuthorId` varchar(100) NULL DEFAULT NULL,
 	PRIMARY KEY (`PersonId`),
 	INDEX `AuthorityRawId` (`AuthorityRawId`),
-	INDEX `AuthorID` (`AuthorID`),
+	INDEX `AuthorId` (`AuthorId`),
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
@@ -61,25 +61,25 @@ insert into Person () select null from Authority.author;
 SET @key = LAST_INSERT_ID();  
 -- This will insert into AuthorityAuthorTemp one row for each row in the Authority.author table combining it with the PersonId from the Person table.
 -- It uses the last insert id and increments it by one for each row.
-INSERT INTO AuthorityAuthorTemp (PersonID, AuthorityRawID, AuthorID)
-SELECT PersonID, RawID, AuthorID
+INSERT INTO AuthorityAuthorTemp (PersonId, AuthorityRawId, AuthorId)
+SELECT PersonId, RawId, AuthorId
 	FROM
 	(
-		SELECT @key + @rn as PersonID, RawID, AuthorID, @rn := @rn + 1
+		SELECT @key + @rn as PersonId, RawId, AuthorId, @rn := @rn + 1
 		FROM (select @rn:=0) x, Authority.author
 	) y;
 
 COMMIT;
 
 
--- Add Author_ID to the Attribute table
+-- Add Author_Id to the Attribute table
 insert ignore into Attribute (Attribute)
-	select AuthorID
+	select AuthorId
 		from AuthorityAuthorTemp;
-insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
-	select t.PersonID, a.AttributeId, 'AUTHORITY_AUTHOR_ID'
+insert into PersonAttribute (PersonId, AttributeId, RelationshipCode)
+	select t.PersonId, a.AttributeId, 'AUTHORITY_AUTHOR_Id'
 		from AuthorityAuthorTemp t
-			inner join Attribute a on a.Attribute=t.AuthorID;
+			inner join Attribute a on a.Attribute=t.AuthorId;
 	
 			
 -- Add EMail to the Attribute table
@@ -87,17 +87,17 @@ insert ignore into Attribute (Attribute)
 	select Name
 		from Authority.email;
 
-insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
-	select t.PersonID, a.AttributeId, 'EMAIL'
+insert into PersonAttribute (PersonId, AttributeId, RelationshipCode)
+	select t.PersonId, a.AttributeId, 'EMAIL'
 		from AuthorityAuthorTemp t
-			inner join Authority.email am on am.RawID=t.AuthorityRawId
+			inner join Authority.email am on am.RawId=t.AuthorityRawId
 			inner join Attribute a on a.Attribute=am.Name;
 
 
 -- Add Names to the PersonName table - primary first
 insert into PersonName
 (
-	PersonID,
+	PersonId,
 	RelationshipCode,
 	FullName,
 	Prefix,
@@ -107,16 +107,16 @@ insert into PersonName
 	Suffix,
 	Nickname
 )
-	select t.PersonID, 'PRIMARY', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
+	select t.PersonId, 'PRIMARY', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
 		from AuthorityAuthorTemp t
-			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing
+			inner join Authority.namevariant n on n.RawId=t.AuthorityRawId and n.Position=0 #Position=0 means that it was listed first and thus was the most frequently appearing
 			;
 
 	
 -- Add Names to the PersonName table - alias's now
 insert into PersonName
 (
-	PersonID,
+	PersonId,
 	RelationshipCode,
 	FullName,
 	Prefix,
@@ -126,9 +126,9 @@ insert into PersonName
 	Suffix,
 	Nickname
 )
-	select t.PersonID, 'ALIAS', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
+	select t.PersonId, 'ALIAS', null, null, n.FirstName, n.MiddleName, n.LastName, n.Suffix, null
 		from AuthorityAuthorTemp t
-			inner join Authority.namevariant n on n.RawID=t.AuthorityRawId and n.Position<>0;
+			inner join Authority.namevariant n on n.RawId=t.AuthorityRawId and n.Position<>0;
 
 
 -- ---------------------------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ insert into PublicationAttribute (PublicationId, AttributeId, RelationshipCode)
 insert into PersonPublication (PersonId, PublicationId, RelationshipCode)
 	select  aat.PersonId, pa.PublicationId, 'AUTHOR'
 		from AuthorityAuthorTemp aat
-			inner join Authority.authornameinstance ani on ani.RawID=aat.AuthorityRawId
+			inner join Authority.authornameinstance ani on ani.RawId=aat.AuthorityRawId
 			inner join Attribute a on a.Attribute=cast(ani.PMID as char(100))
 			inner join PublicationAttribute pa on pa.AttributeId=a.AttributeId and pa.RelationshipCode='PMID';
 
@@ -202,16 +202,16 @@ insert into Term (Term) select distinct Name from Authority.meshterm ;
 insert ignore into PersonTerm (PersonId, TermId, RelationshipCode, Weight)
 	select aat.PersonId, t.TermId, 'MESH', m.Count
 		from AuthorityAuthorTemp aat
-			inner join Authority.meshterm m on m.RawID=aat.AuthorityRawId
+			inner join Authority.meshterm m on m.RawId=aat.AuthorityRawId
 			inner join Term t on t.Term=m.Name;
 
 -- insert ignore into PersonTerm (PersonId, TermId, RelationshipCode, Weight)
 --	select aat.PersonId, t.TermId, 'AFFILIATION', a.Count from AuthorityAuthorTemp aat
---		inner join Authority.affiliation a on a.RawID=aat.AuthorityRawId
+--		inner join Authority.affiliation a on a.RawId=aat.AuthorityRawId
 --		inner join Term t on t.Term=a.Name;
 -- insert ignore into PersonTerm (PersonId, TermId, RelationshipCode, Weight)
 --	select aat.PersonId, t.TermId, 'TITLEWORD', tw.Count from AuthorityAuthorTemp aat
---		inner join Authority.titleword tw on tw.RawID=aat.AuthorityRawId
+--		inner join Authority.titleword tw on tw.RawId=aat.AuthorityRawId
 --		inner join Term t on t.Term=tw.Name;
 
 
@@ -269,8 +269,8 @@ insert into GrantAwardAttribute (GrantAwardId, AttributeId, RelationshipCode)
 insert ignore into PersonGrantAward (PersonId, GrantAwardId, RelationshipCode)
 	select pa.PersonId, gaa.GrantAwardId, 'CITED'
 		from Authority.grantid ag
-			inner join Authority.author aa on aa.RawID=ag.RawID
-			inner join Attribute a1 on a1.Attribute=aa.AuthorID
+			inner join Authority.author aa on aa.RawId=ag.RawId
+			inner join Attribute a1 on a1.Attribute=aa.AuthorId
 			inner join PersonAttribute pa on pa.AttributeId=a1.AttributeId and pa.RelationshipCode='AUTHORITY_AUTHOR_ID'
 			inner join Attribute a2 on a2.Attribute=ag.Name
 			inner join GrantAwardAttribute gaa on gaa.AttributeId=a2.AttributeId and gaa.RelationshipCode='GRANTIDENTIFIER';

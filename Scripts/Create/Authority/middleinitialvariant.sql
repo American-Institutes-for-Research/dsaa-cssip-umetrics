@@ -1,10 +1,10 @@
 CREATE TABLE `middleinitialvariant` (
-	`MiddleInitialVariantID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`RawID` INT(11) UNSIGNED NOT NULL,
+	`MiddleInitialVariantId` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`RawId` INT(11) UNSIGNED NOT NULL,
 	`Position` INT(11) unsigned not null,
 	`Name` VARCHAR(50) NOT NULL,
-	PRIMARY KEY (MiddleInitialVariantID),
-	UNIQUE INDEX `MiddleInitialVariantID` (`MiddleInitialVariantID`),
-	INDEX `RawID` (`RawID`)
+	PRIMARY KEY (MiddleInitialVariantId),
+	UNIQUE INDEX `MiddleInitialVariantId` (`MiddleInitialVariantId`),
+	INDEX `RawId` (`RawId`)
 )
 ENGINE=InnoDB;

@@ -1,11 +1,11 @@
 CREATE TABLE `citationcount` (
-	`CitationCountID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`RawID` INT(11) UNSIGNED NOT NULL,
+	`CitationCountId` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`RawId` INT(11) UNSIGNED NOT NULL,
 	`Position` INT(11) UNSIGNED NOT NULL,
 	`PMID` INT(11) UNSIGNED NOT NULL,
 	`Count` INT(11) UNSIGNED NOT NULL,
-	PRIMARY KEY (`CitationCountID`),
-	UNIQUE INDEX `CitationCountID` (`CitationCountID`),
-	INDEX `RawID` (`RawID`)
+	PRIMARY KEY (`CitationCountId`),
+	UNIQUE INDEX `CitationCountId` (`CitationCountId`),
+	INDEX `RawId` (`RawId`)
 )
 ENGINE=InnoDB;
