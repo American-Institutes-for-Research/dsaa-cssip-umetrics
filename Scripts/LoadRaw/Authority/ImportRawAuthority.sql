@@ -1,3 +1,12 @@
+################################################################################
+# Copyright (c) 2013, AMERICAN INSTITUTES FOR RESEARCH
+# All rights reserved.
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+################################################################################
+
 # Clear out our raw table.
 #truncate table raw;
 
@@ -17,7 +26,7 @@ lines terminated by '\n'
 	@Blocks,
 	@Probabilities,
 	@Cluster,
-	@AuthorID,
+	@AuthorId,
 	@ClusterSize,
 	@NameVariants,
 	@LastNameVariants,
@@ -31,15 +40,15 @@ lines terminated by '\n'
 	@Journals,
 	@TitleWords,
 	@CoauthorNames,
-	@CoauthorIDs,
+	@CoauthorIds,
 	@AuthorNameInstances,
-	@GrantIDs,
+	@GrantIds,
 	@TotalTimesCited,
 	@HIndex,
 	@CitationCounts,
 	@Cited,
 	@CitedBy,
-	@AuthorID_10Year,
+	@AuthorId_10Year,
 	@ClusterSize_10Year,
 	@NameVariants_10Year,
 	@LastNameVariants_10Year,
@@ -53,9 +62,9 @@ lines terminated by '\n'
 	@Journals_10Year,
 	@TitleWords_10Year,
 	@CoauthorNames_10Year,
-	@CoauthorIDs_10Year,
+	@CoauthorIds_10Year,
 	@AuthorNameInstances_10Year,
-	@GrantIDs_10Year,
+	@GrantIds_10Year,
 	@TotalTimesCited_10Year,
 	@HIndex_10Year,
 	@CitationCounts_10Year,
@@ -67,7 +76,7 @@ set
 	Blocks = nullif(@Blocks, ''),
 	Probabilities = nullif(@Probabilities, ''),
 	Cluster = nullif(@Cluster, ''),
-	AuthorID = nullif(@AuthorID, ''),
+	AuthorId = nullif(@AuthorId, ''),
 	ClusterSize = cast(nullif(@ClusterSize, '') as unsigned integer),
 	NameVariants = nullif(@NameVariants, ''),
 	LastNameVariants = nullif(@LastNameVariants, ''),
@@ -81,15 +90,15 @@ set
 	Journals = nullif(@Journals, ''),
 	TitleWords = nullif(@TitleWords, ''),
 	CoauthorNames = nullif(@CoauthorNames, ''),
-	CoauthorIDs = nullif(@CoauthorIDs, ''),
+	CoauthorIds = nullif(@CoauthorIds, ''),
 	AuthorNameInstances = nullif(@AuthorNameInstances, ''),
-	GrantIDs = nullif(@GrantIDs, ''),
+	GrantIds = nullif(@GrantIds, ''),
 	TotalTimesCited = cast(nullif(@TotalTimesCited, '') as unsigned int),
 	HIndex = cast(nullif(@HIndex, '') as decimal),
 	CitationCounts = nullif(@CitationCounts, ''),
 	Cited = nullif(@Cited, ''),
 	CitedBy = nullif(@CitedBy, ''),
-	AuthorID_10Year = nullif(@AuthorID_10Year, ''),
+	AuthorId_10Year = nullif(@AuthorId_10Year, ''),
 	ClusterSize_10Year = cast(nullif(@ClusterSize_10Year, '') as unsigned int),
 	NameVariants_10Year = nullif(@NameVariants_10Year, ''),
 	LastNameVariants_10Year = nullif(@LastNameVariants_10Year, ''),
@@ -103,9 +112,9 @@ set
 	Journals_10Year = nullif(@Journals_10Year, ''),
 	TitleWords_10Year = nullif(@TitleWords_10Year, ''),
 	CoauthorNames_10Year = nullif(@CoauthorNames_10Year, ''),
-	CoauthorIDs_10Year = nullif(@CoauthorIDs_10Year, ''),
+	CoauthorIds_10Year = nullif(@CoauthorIds_10Year, ''),
 	AuthorNameInstances_10Year = nullif(@AuthorNameInstances_10Year, ''),
-	GrantIDs_10Year = nullif(@GrantIDs_10Year, ''),
+	GrantIds_10Year = nullif(@GrantIds_10Year, ''),
 	TotalTimesCited_10Year = cast(nullif(@TotalTimesCited_10Year, '') as unsigned int),
 	HIndex_10Year = cast(nullif(@HIndex_10Year, '') as decimal),
 	CitationCounts_10Year = nullif(@CitationCounts_10Year, ''),

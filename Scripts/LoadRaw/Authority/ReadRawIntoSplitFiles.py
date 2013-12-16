@@ -13,11 +13,11 @@ import re
 # Open all the files that we are going to use.
 def OpenFiles():
 	global blocksFile, probabilitiesFile, nameVariantsFile, lastNameVariantsFile, firstNameVariantsFile, middleInitialVariantsFile
-	global suffixVariantsFile, emailsFile, affiliationsFile, meshTermsFile, journalsFile, titleWordsFile, coauthorNamesFile, coauthorIDsFile
-	global authorNameInstancesFile, grantIDsFile, citationCountsFile, citedFile, citedByFile
+	global suffixVariantsFile, emailsFile, affiliationsFile, meshTermsFile, journalsFile, titleWordsFile, coauthorNamesFile, coauthorIdsFile
+	global authorNameInstancesFile, grantIdsFile, citationCountsFile, citedFile, citedByFile
 	global nameVariantsFile10Recent, lastNameVariantsFile10Recent, firstNameVariantsFile10Recent, middleInitialVariantsFile10Recent
-	global suffixVariantsFile10Recent, emailsFile10Recent, affiliationsFile10Recent, meshTermsFile10Recent, journalsFile10Recent, titleWordsFile10Recent, coauthorNamesFile10Recent, coauthorIDsFile10Recent
-	global authorNameInstancesFile10Recent, grantIDsFile10Recent, citationCountsFile10Recent, citedFile10Recent, citedByFile10Recent
+	global suffixVariantsFile10Recent, emailsFile10Recent, affiliationsFile10Recent, meshTermsFile10Recent, journalsFile10Recent, titleWordsFile10Recent, coauthorNamesFile10Recent, coauthorIdsFile10Recent
+	global authorNameInstancesFile10Recent, grantIdsFile10Recent, citationCountsFile10Recent, citedFile10Recent, citedByFile10Recent
 	splitFileDirectory = "d:\\Raw Data\\Authority\\SplitFiles\\"
 	blocksFile = open(splitFileDirectory+"blocks.txt", "w")
 	probabilitiesFile = open(splitFileDirectory+"probabilities.txt", "w")
@@ -32,9 +32,9 @@ def OpenFiles():
 	journalsFile = open(splitFileDirectory+"journals.txt", "w")
 	titleWordsFile = open(splitFileDirectory+"titlewords.txt", "w")
 	coauthorNamesFile = open(splitFileDirectory+"coauthornames.txt", "w")
-	coauthorIDsFile = open(splitFileDirectory+"coauthorids.txt", "w")
+	coauthorIdsFile = open(splitFileDirectory+"coauthorids.txt", "w")
 	authorNameInstancesFile = open(splitFileDirectory+"authornameinstances.txt", "w")
-	grantIDsFile = open(splitFileDirectory+"grantids.txt", "w")
+	grantIdsFile = open(splitFileDirectory+"grantids.txt", "w")
 	citationCountsFile = open(splitFileDirectory+"citationcounts.txt", "w")
 	citedFile = open(splitFileDirectory+"cited.txt", "w")
 	citedByFile = open(splitFileDirectory+"citedby.txt", "w")
@@ -49,9 +49,9 @@ def OpenFiles():
 	journalsFile10Recent = open(splitFileDirectory+"journals10Recent.txt", "w")
 	titleWordsFile10Recent = open(splitFileDirectory+"titlewords10Recent.txt", "w")
 	coauthorNamesFile10Recent = open(splitFileDirectory+"coauthornames10Recent.txt", "w")
-	coauthorIDsFile10Recent = open(splitFileDirectory+"coauthorids10Recent.txt", "w")
+	coauthorIdsFile10Recent = open(splitFileDirectory+"coauthorids10Recent.txt", "w")
 	authorNameInstancesFile10Recent = open(splitFileDirectory+"authornameinstances10Recent.txt", "w")
-	grantIDsFile10Recent = open(splitFileDirectory+"grantids10Recent.txt", "w")
+	grantIdsFile10Recent = open(splitFileDirectory+"grantids10Recent.txt", "w")
 	citationCountsFile10Recent = open(splitFileDirectory+"citationcounts10Recent.txt", "w")
 	citedFile10Recent = open(splitFileDirectory+"cited10Recent.txt", "w")
 	citedByFile10Recent = open(splitFileDirectory+"citedby10Recent.txt", "w")
@@ -71,9 +71,9 @@ def CloseFiles():
 	journalsFile.close()
 	titleWordsFile.close()
 	coauthorNamesFile.close()
-	coauthorIDsFile.close()
+	coauthorIdsFile.close()
 	authorNameInstancesFile.close()
-	grantIDsFile.close()
+	grantIdsFile.close()
 	citationCountsFile.close()
 	citedFile.close()
 	citedByFile.close()
@@ -88,9 +88,9 @@ def CloseFiles():
 	journalsFile10Recent.close()
 	titleWordsFile10Recent.close()
 	coauthorNamesFile10Recent.close()
-	coauthorIDsFile10Recent.close()
+	coauthorIdsFile10Recent.close()
 	authorNameInstancesFile10Recent.close()
-	grantIDsFile10Recent.close()
+	grantIdsFile10Recent.close()
 	citationCountsFile10Recent.close()
 	citedFile10Recent.close()
 	citedByFile10Recent.close()
@@ -214,7 +214,7 @@ def ProcessNameVariants(outputFile, rawid, namevariants):
 
 
 # Connect to MySQL. This stuff should be in a config file somewhere.
-cnx = mysql.connector.connect(user='mysqladmin', password='shorplun', database='Authority', host='mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com')
+cnx = mysql.connector.connect(user='[username]', password='[password]', database='Authority', host='[host]')
 cursor = cnx.cursor()
 
 OpenFiles()
@@ -250,9 +250,9 @@ for (rawid, blocks, probabilities,
 	ProcessSimpleFieldWithCount(titleWordsFile, rawid, titlewords)
 	ProcessSimpleFieldWithCount(journalsFile, rawid, journals)
 	ProcessSimpleFieldWithCount(coauthorNamesFile, rawid, coauthornames)
-	ProcessSimpleFieldWithCount(coauthorIDsFile, rawid, coauthorids)
+	ProcessSimpleFieldWithCount(coauthorIdsFile, rawid, coauthorids)
 	ProcessAuthorNameInstances(authorNameInstancesFile, rawid, authornameinstances)
-	ProcessSimpleFieldWithCount(grantIDsFile, rawid, grantids)
+	ProcessSimpleFieldWithCount(grantIdsFile, rawid, grantids)
 	ProcessSimpleFieldWithCount(citationCountsFile, rawid, citationcounts)
 	ProcessSimpleFieldWithCount(citedFile, rawid, cited)
 	ProcessSimpleFieldWithCount(citedByFile, rawid, citedby)
@@ -267,9 +267,9 @@ for (rawid, blocks, probabilities,
 	ProcessSimpleFieldWithCount(titleWordsFile10Recent, rawid, titlewords10Recent)
 	ProcessSimpleFieldWithCount(journalsFile10Recent, rawid, journals10Recent)
 	ProcessSimpleFieldWithCount(coauthorNamesFile10Recent, rawid, coauthornames10Recent)
-	ProcessSimpleFieldWithCount(coauthorIDsFile10Recent, rawid, coauthorids10Recent)
+	ProcessSimpleFieldWithCount(coauthorIdsFile10Recent, rawid, coauthorids10Recent)
 	ProcessAuthorNameInstances(authorNameInstancesFile10Recent, rawid, authornameinstances10Recent)
-	ProcessSimpleFieldWithCount(grantIDsFile10Recent, rawid, grantids10Recent)
+	ProcessSimpleFieldWithCount(grantIdsFile10Recent, rawid, grantids10Recent)
 	ProcessSimpleFieldWithCount(citationCountsFile10Recent, rawid, citationcounts10Recent)
 	ProcessSimpleFieldWithCount(citedFile10Recent, rawid, cited10Recent)
 	ProcessSimpleFieldWithCount(citedByFile10Recent, rawid, citedby10Recent)
