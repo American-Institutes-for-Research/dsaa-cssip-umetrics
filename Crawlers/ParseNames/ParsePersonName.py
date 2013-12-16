@@ -1,10 +1,13 @@
-__author__ = 'gregy'
 import mysql.connector
 import NameParser
 import datetime
 
 
 def FromExPORTER(username, password, host, database, table):
+	"""
+	Reads person names from the given table that are in the same format as names from ExPORTER,
+	parses them, and writes the parts back out to the tables.
+	"""
     # Connect to the database.
     cnx = mysql.connector.connect(user=username,password=password,database=database,
                                   host=host)
@@ -16,7 +19,7 @@ def FromExPORTER(username, password, host, database, table):
     getAnotherChunk = True
 
     while getAnotherChunk:
-        queryString = "select PersonNameId, FullName from {0} pn inner join PersonAttribute pa on pa.PersonId=pn.PersonId and pa.RelationshipCode='NIH_PI_ID' limit %s,%s;".format(table)
+        queryString = "select PersonNameId, FullName from {0} pn inner join PersonAttribute pa on pa.PersonId=pn.PersonId and pa.RelationshipCode='NIH_PI_ID' where GivenName is null and FamilyName is null limit %s,%s;".format(table)
         cursorRead.execute(queryString, (startRow, numRowsToGet))
         numRowsRead = 0
         for (PersonNameId, FullName) in cursorRead:
@@ -41,10 +44,16 @@ def FromExPORTER(username, password, host, database, table):
 
     return
 
-# Note that in this function we couldn't use the limit x,y mechanism. I believe that is because we are changing
-# values in the database that are also used in the 'where' clause of the select statement. So instead we are getting
-# rows in order by PersonNameId.
 def FromCiteSeerX(username, password, host, database, table):
+	"""
+	Reads person names from the given table that are in the same format as names from ExPORTER,
+	parses them, and writes the parts back out to the tables.
+	
+	Note that in this function we couldn't use the limit x,y mechanism. I believe
+	that is because we are changing	values in the database that are also used in
+	the 'where' clause of the select statement. So instead we are getting rows in
+	order by PersonNameId.
+	"""
     numRowsToGet = 10000
     totalRowsProcessed = 0
     getAnotherChunk = True

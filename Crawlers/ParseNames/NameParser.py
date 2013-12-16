@@ -1,18 +1,28 @@
-__author__ = 'gregy'
 from collections import namedtuple
 
 
-# Since enums aren't supported in Python 3.3 (they are in 3.4), we're going to use constants, which it turns out
-# aren't really constants, but it's what Python has
 class NameFormat:
-    ExPORTER, Authority, CiteSeerX = range(3)
+    ExPORTER, Authority, CiteSeerX = range(3) # Since enums aren't supported in Python 3.3 (they are in 3.4), we're going to use pseudo-constants
 
+# After the name is parsed by the functions below, the parts are returned in this tuple.
 NameComponents=namedtuple("NameComponents","Prefix GivenName OtherName FamilyName Suffix NickName")
 
+# The parsers ignore case and periods that appear in prefixes and suffixes.
 Suffixes = ["JR","SR","II","III","IV","V","VI","PHD","MD","RN","DR","JD","MED","MPH","PHMD","DRPH","FAAN","MD PHD","MP"]
 Prefixes = ["DR","MR","MRS","MS","PROF"]
 
+
 def ParseName(nameFormat, nameString):
+	"""
+	Parses a string presumed to contain a person's name into multiple parts.
+	
+	Parameters:
+		nameFormat: a value from the NameFormat class indicating the expected
+					format of the nameString parameter.
+		nameString: the string containing the name to be parsed.
+	 
+	 Returns: a NameComponent tuple
+	"""
     components = NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None,
                                 Suffix=None, NickName=None)
     nameString = nameString.replace("&nbsp;"," ")
@@ -24,6 +34,27 @@ def ParseName(nameFormat, nameString):
 
 
 def ParseNameForCiteSeerX(nameString):
+	"""
+	Parse a string of CiteSeerX format into constituent parts.
+	
+	Outside scripts should not be calling this function directly, but rather they
+	should call the ParseName function above.
+	 
+	The function is specifically written to parse names as they appear in the
+	CiteSeerX data. That format is generally:
+		[prefix] [givenname] [othername] [familyname] [suffix].
+	
+	Returns: a NameComponent tuple
+	 
+	* Only one prefix and one suffix are supported.
+	* If there is only one word, the function returns None for all parts.
+	* The parts are expected to be separated by spaces.
+	* If there is an unclosed left parentheses, it and everything to the right
+		of it is ignored.
+	If the last word in the string is a single character, and not a valid
+		suffix, it is ignored.
+	"""
+	
     prefix = None
     givenName = None
     otherName = None
@@ -75,17 +106,33 @@ def ParseNameForCiteSeerX(nameString):
 
 
 
-# This function handles names with these patterns:
-# [familyname], [givenname] [othername]
-# [familyname], [suffix], [givenname] [othername]
-# [familyname] [suffix], [givenname] [othername]
-# [familyname], [givenname]
-# [familyname], [suffix], [givenname]
-# [familyname] [suffix], [givenname]
-# [familyname], [givenname], [suffix]
-# [familyname], [givenname] [othername], [suffix]
-# familyname and othername can have blanks in them, but suffix and givenname cannot
 def ParseNameForExPORTER(nameString):
+	"""
+	Parses a string of ExPORTER format into constituent parts.
+	
+	Outside scripts should not be calling this function directly, but rather they
+	should call the ParseName function above.
+	
+	The	function is specifically written to parse names as they appear in the NIH
+	ExPORTER data. That format can be any of the following:
+	 	[familyname], [givenname] [othername]
+	 	[familyname], [suffix], [givenname] [othername]
+	 	[familyname] [suffix], [givenname] [othername]
+	 	[familyname], [givenname]
+	 	[familyname], [suffix], [givenname]
+	 	[familyname] [suffix], [givenname]
+	 	[familyname], [givenname], [suffix]
+	 	[familyname], [givenname] [othername], [suffix]
+	 
+	Returns: a NameComponent tuple
+	 
+	* Multiple suffixes are supported and can be separated by either spaces or
+		commas.
+	* If there is not at least one comma, all parts are returned as None.
+	 * [givenname] will always be just one word; [othername] and [familyname] can
+		be multiple.
+	"""
+
     prefix = None
     givenName = None
     otherName = None
@@ -140,8 +187,8 @@ def ParseNameForExPORTER(nameString):
     return NameComponents(Prefix=prefix, GivenName=givenName, OtherName=otherName,
                           FamilyName=familyName, Suffix=suffix, NickName=nickName)
 
-# Parses a string that contains a family name and perhaps a suffix.
 def ParseFamilyName(nameString):
+	"""Parses a string that contains a family name and perhaps a suffix."""
     familyName = nameString
     suffix = None
     separated = nameString.rsplit(" ",1) #rsplit is important here. If there are multiple blanks, everything before the last one is considered familyname
@@ -154,9 +201,8 @@ def ParseFamilyName(nameString):
     return NameComponents(Prefix=None, GivenName=None, OtherName=None,
                           FamilyName=familyName, Suffix=suffix, NickName=None)
 
-# Give it a string, it will return bool as to whether the string contains only suffixes or not.
-# Suffixes can be separated by commas or spaces, but not a mixture
 def StringContainsOnlySuffixes(suffixString):
+	""" Determines if a string contains only suffixes, either comma or space separated."""
     rc = True
     suffixString = suffixString.strip().replace(".","")
     commaSeparated = suffixString.split(",")
@@ -174,6 +220,7 @@ def StringContainsOnlySuffixes(suffixString):
 # Give it a string, it will return bool as to whether the string contains only prefixes or not.
 # Prefixes can be separated by commas or spaces, but not a mixture
 def StringContainsOnlyPrefixes(prefixString):
+	"""Determines if a string contains only prefixes, either comma or space separated."""
     rc = True
     prefixString = prefixString.strip().replace(".","")
     commaSeparated = prefixString.split(",")
@@ -188,7 +235,9 @@ def StringContainsOnlyPrefixes(prefixString):
                 rc = False
     return rc
 
+	
 if __name__ == "__main__":
+	"""Test cases"""
     print("A\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName OtherName")
                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
     print("B\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName Other Name")
