@@ -2,316 +2,372 @@ from collections import namedtuple
 
 
 class NameFormat:
-    ExPORTER, Authority, CiteSeerX = range(3) # Since enums aren't supported in Python 3.3 (they are in 3.4), we're going to use pseudo-constants
+    # Since enums aren't supported in Python 3.3 (they are in 3.4), we're going to use pseudo-constants
+    EXPORTER, AUTHORITY, CITESEERX = range(3)
 
 # After the name is parsed by the functions below, the parts are returned in this tuple.
-NameComponents=namedtuple("NameComponents","Prefix GivenName OtherName FamilyName Suffix NickName")
+NameComponents = namedtuple("NameComponents", "Prefix GivenName OtherName FamilyName Suffix NickName")
 
 # The parsers ignore case and periods that appear in prefixes and suffixes.
-Suffixes = ["JR","SR","II","III","IV","V","VI","PHD","MD","RN","DR","JD","MED","MPH","PHMD","DRPH","FAAN","MD PHD","MP"]
-Prefixes = ["DR","MR","MRS","MS","PROF"]
+Suffixes = ["JR", "SR", "II", "III", "IV", "V", "VI", "PHD", "MD", "RN", "DR", "JD", "MED",
+            "MPH", "PHMD", "DRPH", "FAAN", "MD PHD", "MP"]
+Prefixes = ["DR", "MR", "MRS", "MS", "PROF"]
 
 
-def ParseName(nameFormat, nameString):
-	"""
-	Parses a string presumed to contain a person's name into multiple parts.
-	
-	Parameters:
-		nameFormat: a value from the NameFormat class indicating the expected
-					format of the nameString parameter.
-		nameString: the string containing the name to be parsed.
-	 
-	 Returns: a NameComponent tuple
-	"""
+def parse_name(name_format, name_string):
+    """
+    Parses a string presumed to contain a person's name into multiple parts.
+
+    Parameters:
+        nameFormat: a value from the NameFormat class indicating the expected
+            format of the nameString parameter.
+        nameString: the string containing the name to be parsed.
+
+    Returns: a NameComponent tuple
+
+    """
+
     components = NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None,
                                 Suffix=None, NickName=None)
-    nameString = nameString.replace("&nbsp;"," ")
-    if nameFormat == NameFormat.ExPORTER:
-        components = ParseNameForExPORTER(nameString)
-    elif nameFormat == NameFormat.CiteSeerX:
-        components = ParseNameForCiteSeerX(nameString)
+    name_string = name_string.replace("&nbsp;", " ")
+    if name_format == NameFormat.EXPORTER:
+        components = parse_name_for_exporter(name_string)
+    elif name_format == NameFormat.CITESEERX:
+        components = parse_name_for_citeseerx(name_string)
     return components
 
 
-def ParseNameForCiteSeerX(nameString):
-	"""
-	Parse a string of CiteSeerX format into constituent parts.
-	
-	Outside scripts should not be calling this function directly, but rather they
-	should call the ParseName function above.
-	 
-	The function is specifically written to parse names as they appear in the
-	CiteSeerX data. That format is generally:
-		[prefix] [givenname] [othername] [familyname] [suffix].
-	
-	Returns: a NameComponent tuple
-	 
-	* Only one prefix and one suffix are supported.
-	* If there is only one word, the function returns None for all parts.
-	* The parts are expected to be separated by spaces.
-	* If there is an unclosed left parentheses, it and everything to the right
-		of it is ignored.
-	If the last word in the string is a single character, and not a valid
-		suffix, it is ignored.
-	"""
-	
-    prefix = None
-    givenName = None
-    otherName = None
-    familyName = None
-    suffix = None
-    nickName = None
+def parse_name_for_citeseerx(name_string):
+    """
+    Parse a string of CiteSeerX format into constituent parts.
 
-    nameString = nameString.strip(",").strip()
+    Outside scripts should not be calling this function directly, but rather they
+    should call the ParseName function above.
+
+    The function is specifically written to parse names as they appear in the
+    CiteSeerX data. That format is generally:
+        [prefix] [givenname] [othername] [familyname] [suffix].
+
+    Returns: a NameComponent tuple
+
+    * Only one prefix and one suffix are supported.
+    * If there is only one word, the function returns None for all parts.
+    * The parts are expected to be separated by spaces.
+    * If there is an unclosed left parentheses, it and everything to the right
+        of it is ignored.
+    If the last word in the string is a single character, and not a valid
+        suffix, it is ignored.
+
+    """
+
+    prefix = None
+    given_name = None
+    other_name = None
+    family_name = None
+    suffix = None
+    nick_name = None
+
+    name_string = name_string.strip(",").strip()
     # If there is an unclosed left paren, the trash it and everything to the right of it
-    if (nameString.count("(") > 0) and (nameString.count(")") == 0):
-        nameString = nameString.split("(", 1)[0]
-    spaceSeparated = nameString.split(" ", 1)
+    if (name_string.count("(") > 0) and (name_string.count(")") == 0):
+        name_string = name_string.split("(", 1)[0]
+    space_separated = name_string.split(" ", 1)
     # Check to see if the first string is a prefix
-    if StringContainsOnlyPrefixes(spaceSeparated[0]):
-        prefix = spaceSeparated[0]
-        spaceSeparated = spaceSeparated[1].strip().split(" ", 1) # Strip off the prefix and continue on
-    # If there is only one word, then don't return any results
-    if len(spaceSeparated) == 1:
+    if string_contains_only_prefixes(space_separated[0]):
+        prefix = space_separated[0]
+        space_separated = space_separated[1].strip().split(" ", 1)  # Strip off the prefix and continue on
+        # If there is only one word, then don't return any results
+    if len(space_separated) == 1:
         prefix = None
     else:
-        givenName = spaceSeparated[0]
-        spaceSeparated = spaceSeparated[1].strip().rsplit(" ", 1)
-        if len(spaceSeparated) == 1:
-            familyName = spaceSeparated[0]
+        given_name = space_separated[0]
+        space_separated = space_separated[1].strip().rsplit(" ", 1)
+        if len(space_separated) == 1:
+            family_name = space_separated[0]
         else:
-            if StringContainsOnlySuffixes(spaceSeparated[1]):
-                suffix = spaceSeparated[1]
-                spaceSeparated = spaceSeparated[0].strip().rsplit(" ", 1)
-            if len(spaceSeparated) == 1:
-                familyName = spaceSeparated[0]
+            if string_contains_only_suffixes(space_separated[1]):
+                suffix = space_separated[1]
+                space_separated = space_separated[0].strip().rsplit(" ", 1)
+            if len(space_separated) == 1:
+                family_name = space_separated[0]
             else:
                 # If the last piece is only one character, ignore it
-                if len(spaceSeparated[1]) == 1:
-                    spaceSeparated = spaceSeparated[0].strip().rsplit(" ", 1)
-                if len(spaceSeparated) == 1:
-                    familyName = spaceSeparated[0]
+                if len(space_separated[1]) == 1:
+                    space_separated = space_separated[0].strip().rsplit(" ", 1)
+                if len(space_separated) == 1:
+                    family_name = space_separated[0]
                 else:
-                    otherName = spaceSeparated[0]
-                    familyName = spaceSeparated[1]
+                    other_name = space_separated[0]
+                    family_name = space_separated[1]
 
-    if prefix != None: prefix = prefix.strip()
-    if givenName != None: givenName = givenName.strip()
-    if otherName != None: otherName = otherName.strip()
-    if familyName != None: familyName = familyName.strip()
-    if suffix != None: suffix = suffix.strip()
+    if prefix is not None:
+        prefix = prefix.strip()
+    if given_name is not None:
+        given_name = given_name.strip()
+    if other_name is not None:
+        other_name = other_name.strip()
+    if family_name is not None:
+        family_name = family_name.strip()
+    if suffix is not None:
+        suffix = suffix.strip()
 
-    return NameComponents(Prefix=prefix, GivenName=givenName, OtherName=otherName,
-                      FamilyName=familyName, Suffix=suffix, NickName=nickName)
+    return NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
+                          FamilyName=family_name, Suffix=suffix, NickName=nick_name)
 
 
+def parse_name_for_exporter(name_string):
+    """
+    Parses a string of ExPORTER format into constituent parts.
 
-def ParseNameForExPORTER(nameString):
-	"""
-	Parses a string of ExPORTER format into constituent parts.
-	
-	Outside scripts should not be calling this function directly, but rather they
-	should call the ParseName function above.
-	
-	The	function is specifically written to parse names as they appear in the NIH
-	ExPORTER data. That format can be any of the following:
-	 	[familyname], [givenname] [othername]
-	 	[familyname], [suffix], [givenname] [othername]
-	 	[familyname] [suffix], [givenname] [othername]
-	 	[familyname], [givenname]
-	 	[familyname], [suffix], [givenname]
-	 	[familyname] [suffix], [givenname]
-	 	[familyname], [givenname], [suffix]
-	 	[familyname], [givenname] [othername], [suffix]
-	 
-	Returns: a NameComponent tuple
-	 
-	* Multiple suffixes are supported and can be separated by either spaces or
-		commas.
-	* If there is not at least one comma, all parts are returned as None.
-	 * [givenname] will always be just one word; [othername] and [familyname] can
-		be multiple.
-	"""
+    Outside scripts should not be calling this function directly, but rather they
+    should call the ParseName function above.
+
+    The	function is specifically written to parse names as they appear in the NIH
+    ExPORTER data. That format can be any of the following:
+        [familyname], [givenname] [othername]
+        [familyname], [suffix], [givenname] [othername]
+        [familyname] [suffix], [givenname] [othername]
+        [familyname], [givenname]
+        [familyname], [suffix], [givenname]
+        [familyname] [suffix], [givenname]
+        [familyname], [givenname], [suffix]
+        [familyname], [givenname] [othername], [suffix]
+
+    Returns: a NameComponent tuple
+
+    * Multiple suffixes are supported and can be separated by either spaces or
+        commas.
+    * If there is not at least one comma, all parts are returned as None.
+    * [givenname] will always be just one word; [othername] and [familyname] can
+        be multiple.
+
+    """
 
     prefix = None
-    givenName = None
-    otherName = None
-    familyName = None
+    given_name = None
+    other_name = None
+    family_name = None
     suffix = None
-    nickName = None
+    nick_name = None
 
-    nameString = nameString.strip(",").strip() # get rid of leading and trailing commas and whitespace
-    commaSeparated = nameString.split(",", 1)
+    name_string = name_string.strip(",").strip()  # get rid of leading and trailing commas and whitespace
+    comma_separated = name_string.split(",", 1)
+    remainder = ""
 
     # If there are 3 commas, then there are may be multiple suffixes. Those will either appear at the end
     # or after the family name.
 
-    # If there are 3 or more commas, check everything between the first and last comma to see if it contains only suffixes
-    if (nameString.count(",") >= 3) and (StringContainsOnlySuffixes(commaSeparated[1].rsplit(",",1)[0].strip())):
-        suffix = commaSeparated[1].rsplit(",",1)[0] # everything between the first and last comma
-        familyName = commaSeparated[0] # everything before the first comma
-        remainder = commaSeparated[1].rsplit(",",1)[1].strip() # everything after the last comma
-        spaceSeparated = remainder.split(" ", 1)
-        givenName = spaceSeparated[0].strip(",") # up to the first blank in remainder
-        if len(spaceSeparated) > 1: # if there is a blank...
-            otherName = spaceSeparated[1] # everything after the first blank in remainder
+    # If there are 3 or more commas, check everything between the first and last comma to see
+    # if it contains only suffixes
+    if (name_string.count(",") >= 3) and (string_contains_only_suffixes(comma_separated[1].rsplit(",", 1)[0].strip())):
+        suffix = comma_separated[1].rsplit(",", 1)[0]  # everything between the first and last comma
+        family_name = comma_separated[0]  # everything before the first comma
+        remainder = comma_separated[1].rsplit(",", 1)[1].strip()  # everything after the last comma
+        space_separated = remainder.split(" ", 1)
+        given_name = space_separated[0].strip(",")  # up to the first blank in remainder
+        if len(space_separated) > 1:  # if there is a blank...
+            other_name = space_separated[1]  # everything after the first blank in remainder
     else:
-        commaSeparated = nameString.split(",", 2) # Only break into at most 3 parts by the first two commas
-        if len(commaSeparated) > 1: # If there aren't any commas then this is the wrong function to call
+        comma_separated = name_string.split(",", 2)  # Only break into at most 3 parts by the first two commas
+        # If there aren't any commas then this is the wrong function to call
+        if len(comma_separated) > 1:
             # If there is only one comma, then the part before the comma contains familyname and optionally suffix,
             # and the part after the comma contains givenname and optionally othername
-            if len(commaSeparated) == 2:
-                familyNameComponents = ParseFamilyName(commaSeparated[0])
-                familyName = familyNameComponents.FamilyName
-                suffix = familyNameComponents.Suffix
-                remainder = commaSeparated[1].strip()
+            if len(comma_separated) == 2:
+                family_name_components = parse_family_name(comma_separated[0])
+                family_name = family_name_components.FamilyName
+                suffix = family_name_components.Suffix
+                remainder = comma_separated[1].strip()
             # If there are two commas (i.e. 3 parts)
-            elif len(commaSeparated) == 3:
+            elif len(comma_separated) == 3:
                 # It's possible that the third part is actually a suffix, so check that first
-                if StringContainsOnlySuffixes(commaSeparated[2]):
-                    suffix = commaSeparated[2]
-                    familyName = commaSeparated[0]
-                    remainder = commaSeparated[1].strip()
+                if string_contains_only_suffixes(comma_separated[2]):
+                    suffix = comma_separated[2]
+                    family_name = comma_separated[0]
+                    remainder = comma_separated[1].strip()
                 else:
-                    familyName = commaSeparated[0]
-                    suffix = commaSeparated[1]
-                    remainder = commaSeparated[2].strip()
-            spaceSeparated = remainder.split(" ", 1)
-            givenName = spaceSeparated[0].strip(",")
-            if len(spaceSeparated) > 1:
-                otherName = spaceSeparated[1]
-    if familyName != None: familyName = familyName.strip()
-    if givenName != None: givenName = givenName.strip()
-    if otherName != None: otherName = otherName.strip()
-    if suffix != None: suffix = suffix.strip()
-    return NameComponents(Prefix=prefix, GivenName=givenName, OtherName=otherName,
-                          FamilyName=familyName, Suffix=suffix, NickName=nickName)
+                    family_name = comma_separated[0]
+                    suffix = comma_separated[1]
+                    remainder = comma_separated[2].strip()
+            space_separated = remainder.split(" ", 1)
+            given_name = space_separated[0].strip(",")
+            if len(space_separated) > 1:
+                other_name = space_separated[1]
+    if family_name is not None:
+        family_name = family_name.strip()
+    if given_name is not None:
+        given_name = given_name.strip()
+    if other_name is not None:
+        other_name = other_name.strip()
+    if suffix is not None:
+        suffix = suffix.strip()
+    return NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
+                          FamilyName=family_name, Suffix=suffix, NickName=nick_name)
 
-def ParseFamilyName(nameString):
-	"""Parses a string that contains a family name and perhaps a suffix."""
-    familyName = nameString
+
+def parse_family_name(name_string):
+    """Parses a string that contains a family name and perhaps a suffix."""
+    family_name = name_string
     suffix = None
-    separated = nameString.rsplit(" ",1) #rsplit is important here. If there are multiple blanks, everything before the last one is considered familyname
+    #rsplit is important here. If there are multiple blanks, everything before the last one is considered familyname
+    separated = name_string.rsplit(" ", 1)
     if len(separated) > 1:
         if any(x == separated[1].upper().strip() for x in Suffixes):
-            familyName = separated[0]
+            family_name = separated[0]
             suffix = separated[1]
-    if familyName != None: familyName = familyName.strip()
-    if suffix != None: suffix = suffix.strip()
+    if family_name is not None:
+        family_name = family_name.strip()
+    if suffix is not None:
+        suffix = suffix.strip()
     return NameComponents(Prefix=None, GivenName=None, OtherName=None,
-                          FamilyName=familyName, Suffix=suffix, NickName=None)
+                          FamilyName=family_name, Suffix=suffix, NickName=None)
 
-def StringContainsOnlySuffixes(suffixString):
-	""" Determines if a string contains only suffixes, either comma or space separated."""
+
+def string_contains_only_suffixes(suffix_string):
+    """ Determines if a string contains only suffixes, either comma or space separated."""
     rc = True
-    suffixString = suffixString.strip().replace(".","")
-    commaSeparated = suffixString.split(",")
-    if len(commaSeparated) > 1:
-        for (part) in commaSeparated:
+    suffix_string = suffix_string.strip().replace(".", "")
+    comma_separated = suffix_string.split(",")
+    if len(comma_separated) > 1:
+        for (part) in comma_separated:
             if all(x != part.upper().strip() for x in Suffixes):
                 rc = False
     else:
-        spaceSeparated = suffixString.split(" ")
-        for (part) in spaceSeparated:
+        space_separated = suffix_string.split(" ")
+        for (part) in space_separated:
             if all(x != part.upper().strip() for x in Suffixes):
                 rc = False
     return rc
 
-# Give it a string, it will return bool as to whether the string contains only prefixes or not.
-# Prefixes can be separated by commas or spaces, but not a mixture
-def StringContainsOnlyPrefixes(prefixString):
-	"""Determines if a string contains only prefixes, either comma or space separated."""
+
+def string_contains_only_prefixes(prefix_string):
+    """Determines if a string contains only prefixes, either comma or space separated."""
     rc = True
-    prefixString = prefixString.strip().replace(".","")
-    commaSeparated = prefixString.split(",")
-    if len(commaSeparated) > 1:
-        for (part) in commaSeparated:
+    prefix_string = prefix_string.strip().replace(".", "")
+    comma_separated = prefix_string.split(",")
+    if len(comma_separated) > 1:
+        for (part) in comma_separated:
             if all(x != part.upper().strip() for x in Prefixes):
                 rc = False
     else:
-        spaceSeparated = prefixString.split(" ")
-        for (part) in spaceSeparated:
+        space_separated = prefix_string.split(" ")
+        for (part) in space_separated:
             if all(x != part.upper().strip() for x in Prefixes):
                 rc = False
     return rc
 
-	
+
 if __name__ == "__main__":
-	"""Test cases"""
-    print("A\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("B\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName Other Name")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Other Name", Suffix=None, NickName=None))
-    print("C\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("D\t",ParseName(NameFormat.ExPORTER,"Family VName, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family VName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("E\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName Other Name")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name", Suffix=None, NickName=None))
-    print("F\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName Double Other Name")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Double Other Name", Suffix=None, NickName=None))
-    print("G\t",ParseName(NameFormat.ExPORTER,"FamilyName JR, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix="JR", NickName=None))
-    print("H\t",ParseName(NameFormat.ExPORTER,"FamilyName, III, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix="III", NickName=None))
-    print("I\t",ParseName(NameFormat.ExPORTER,"Family Name IV, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="IV", NickName=None))
-    print("J\t",ParseName(NameFormat.ExPORTER,"Family Name, PhD, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="PhD", NickName=None))
-    print("K\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName OtherName,")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("L\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName, jr.")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None, Suffix="jr.", NickName=None))
-    print("M\t",ParseName(NameFormat.ExPORTER,"Family Name, SR, GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="SR", NickName=None))
-    print("N\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName OtherName, MD")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="MD", NickName=None))
-    print("O\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName OtherName, M.D., PhD")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="M.D., PhD", NickName=None))
-    print("P\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName OtherName, MD Ph.D")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="MD Ph.D", NickName=None))
-    print("Q\t",ParseName(NameFormat.ExPORTER,"Family Name, MD, Ph.D., GivenName OtherName")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName", Suffix="MD, Ph.D.", NickName=None))
-    print("R\t",ParseName(NameFormat.ExPORTER,"Family Name, MD, Ph.D, GivenName Other Name")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name", Suffix="MD, Ph.D", NickName=None))
-    print("S\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName Other Name, MD Ph.D")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name", Suffix="MD Ph.D", NickName=None))
-    print("T\t",ParseName(NameFormat.ExPORTER,"Family Name, GivenName Other Name, III, MD, Ph.D")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name", Suffix="III, MD, Ph.D", NickName=None))
-    print("U\t",ParseName(NameFormat.ExPORTER,"Family Name, Sr., MD, Ph.D., GivenName Other Name")
-                == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name", Suffix="Sr., MD, Ph.D.", NickName=None))
-    print("V\t",ParseName(NameFormat.ExPORTER,"FamilyName, GivenName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None, Suffix=None, NickName=None))
+    """Test cases"""
+    print("A\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix=None, NickName=None))
+    print("B\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName Other Name")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix=None, NickName=None))
+    print("C\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix=None, NickName=None))
+    print("D\t", parse_name(NameFormat.EXPORTER, "Family VName, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family VName", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix=None, NickName=None))
+    print("E\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName Other Name")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix=None, NickName=None))
+    print("F\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName Double Other Name")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName",
+                                   OtherName="Double Other Name", Suffix=None, NickName=None))
+    print("G\t", parse_name(NameFormat.EXPORTER, "FamilyName JR, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="JR", NickName=None))
+    print("H\t", parse_name(NameFormat.EXPORTER, "FamilyName, III, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="III", NickName=None))
+    print("I\t", parse_name(NameFormat.EXPORTER, "Family Name IV, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="IV", NickName=None))
+    print("J\t", parse_name(NameFormat.EXPORTER, "Family Name, PhD, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="PhD", NickName=None))
+    print("K\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName OtherName,")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix=None, NickName=None))
+    print("L\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName, jr.")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                                   Suffix="jr.", NickName=None))
+    print("M\t", parse_name(NameFormat.EXPORTER, "Family Name, SR, GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="SR", NickName=None))
+    print("N\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName OtherName, MD")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="MD", NickName=None))
+    print("O\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName OtherName, M.D., PhD")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="M.D., PhD", NickName=None))
+    print("P\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName OtherName, MD Ph.D")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="MD Ph.D", NickName=None))
+    print("Q\t", parse_name(NameFormat.EXPORTER, "Family Name, MD, Ph.D., GivenName OtherName")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="OtherName",
+                                   Suffix="MD, Ph.D.", NickName=None))
+    print("R\t", parse_name(NameFormat.EXPORTER, "Family Name, MD, Ph.D, GivenName Other Name")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix="MD, Ph.D", NickName=None))
+    print("S\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName Other Name, MD Ph.D")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix="MD Ph.D", NickName=None))
+    print("T\t", parse_name(NameFormat.EXPORTER, "Family Name, GivenName Other Name, III, MD, Ph.D")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix="III, MD, Ph.D", NickName=None))
+    print("U\t", parse_name(NameFormat.EXPORTER, "Family Name, Sr., MD, Ph.D., GivenName Other Name")
+                 == NameComponents(Prefix=None, FamilyName="Family Name", GivenName="GivenName", OtherName="Other Name",
+                                   Suffix="Sr., MD, Ph.D.", NickName=None))
+    print("V\t", parse_name(NameFormat.EXPORTER, "FamilyName, GivenName")
+                 == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                                   Suffix=None, NickName=None))
 
-
-    print("AA\t",ParseName(NameFormat.CiteSeerX,"GivenName FamilyName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None, Suffix=None, NickName=None))
-    print("BB\t",ParseName(NameFormat.CiteSeerX,"GivenName OtherName FamilyName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("CC\t",ParseName(NameFormat.CiteSeerX,"Dr. GivenName OtherName FamilyName")
-                == NameComponents(Prefix="Dr.", FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("DD\t",ParseName(NameFormat.CiteSeerX,"GivenName Multiple Other Name FamilyName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Multiple Other Name", Suffix=None, NickName=None))
-    print("EE\t",ParseName(NameFormat.CiteSeerX,"GivenName OtherName FamilyName Jr")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix="Jr", NickName=None))
-    print("FF\t",ParseName(NameFormat.CiteSeerX,"Dr GivenName OtherName FamilyName III")
-                == NameComponents(Prefix="Dr", FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix="III", NickName=None))
-    print("GG\t",ParseName(NameFormat.CiteSeerX,"GivenName OtherName FamilyName&nbsp;III")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix="III", NickName=None))
-    print("HH\t",ParseName(NameFormat.CiteSeerX,"GivenName OtherName FamilyName (III")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName", Suffix=None, NickName=None))
-    print("II\t",ParseName(NameFormat.CiteSeerX,"WhoKnows")
-                == NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None, Suffix=None, NickName=None))
-    print("JJ\t",ParseName(NameFormat.CiteSeerX,"Dr. WhoKnows")
-                == NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None, Suffix=None, NickName=None))
-    print("KK\t",ParseName(NameFormat.CiteSeerX,"GivenName FamilyName V")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None, Suffix="V", NickName=None))
-    print("LL\t",ParseName(NameFormat.CiteSeerX,"GivenName(s) FamilyName")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName(s)", OtherName=None, Suffix=None, NickName=None))
-    print("MM\t",ParseName(NameFormat.CiteSeerX,"GivenName FamilyName Q")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None, Suffix=None, NickName=None))
-    print("NN\t",ParseName(NameFormat.CiteSeerX,"GivenName Other Name FamilyName Q")
-                == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Other Name", Suffix=None, NickName=None))
-    print("OO\t",ParseName(NameFormat.CiteSeerX," I.V. Basawa")
-                == NameComponents(Prefix=None, FamilyName="Basawa", GivenName="I.V.", OtherName=None, Suffix=None, NickName=None))
-
+    print("AA\t", parse_name(NameFormat.CITESEERX, "GivenName FamilyName")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                                    Suffix=None, NickName=None))
+    print("BB\t", parse_name(NameFormat.CITESEERX, "GivenName OtherName FamilyName")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix=None, NickName=None))
+    print("CC\t", parse_name(NameFormat.CITESEERX, "Dr. GivenName OtherName FamilyName")
+                  == NameComponents(Prefix="Dr.", FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix=None, NickName=None))
+    print("DD\t", parse_name(NameFormat.CITESEERX, "GivenName Multiple Other Name FamilyName")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName",
+                                    OtherName="Multiple Other Name", Suffix=None, NickName=None))
+    print("EE\t", parse_name(NameFormat.CITESEERX, "GivenName OtherName FamilyName Jr")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix="Jr", NickName=None))
+    print("FF\t", parse_name(NameFormat.CITESEERX, "Dr GivenName OtherName FamilyName III")
+                  == NameComponents(Prefix="Dr", FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix="III", NickName=None))
+    print("GG\t", parse_name(NameFormat.CITESEERX, "GivenName OtherName FamilyName&nbsp;III")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix="III", NickName=None))
+    print("HH\t", parse_name(NameFormat.CITESEERX, "GivenName OtherName FamilyName (III")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="OtherName",
+                                    Suffix=None, NickName=None))
+    print("II\t", parse_name(NameFormat.CITESEERX, "WhoKnows")
+                  == NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None, Suffix=None,
+                                    NickName=None))
+    print("JJ\t", parse_name(NameFormat.CITESEERX, "Dr. WhoKnows")
+                  == NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None, Suffix=None,
+                                    NickName=None))
+    print("KK\t", parse_name(NameFormat.CITESEERX, "GivenName FamilyName V")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                                    Suffix="V", NickName=None))
+    print("LL\t", parse_name(NameFormat.CITESEERX, "GivenName(s) FamilyName")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName(s)", OtherName=None,
+                                    Suffix=None, NickName=None))
+    print("MM\t", parse_name(NameFormat.CITESEERX, "GivenName FamilyName Q")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                                    Suffix=None, NickName=None))
+    print("NN\t", parse_name(NameFormat.CITESEERX, "GivenName Other Name FamilyName Q")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="Other Name",
+                                    Suffix=None, NickName=None))
+    print("OO\t", parse_name(NameFormat.CITESEERX, " I.V. Basawa")
+                  == NameComponents(Prefix=None, FamilyName="Basawa", GivenName="I.V.", OtherName=None, Suffix=None,
+                                    NickName=None))
