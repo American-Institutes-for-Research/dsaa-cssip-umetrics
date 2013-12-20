@@ -6,6 +6,9 @@
 # 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
+"""
+This module will create tokens for chunking/grouping/clustering/etc names for comparison purposes.
+"""
 import re, os, sys, subprocess, mysql.connector
 sys.path.append(os.path.abspath('../ThirdParty'))
 from unidecode import unidecode
@@ -14,22 +17,26 @@ from unidecode import unidecode
 _pattern = re.compile("[^\W_]")
 
 
-# Simple function to clean up and "standardize" name components for clustering.  Our clustering is extremely crude
-# right now.  It goes a little something like this:
-#
-#   Step 1: Remove diacritics
-#   Step 2: Remove punctuation
-#   Step 3: Take the first 4 characters in each name component (fewer if the name is less than 4 characters)
-#   Step 4: Capitalize
-#   Step 5: Return what's left over
 def tokenize_name(name_component):
+    """
+    Simple function to clean up and "standardize" name components for clustering.  Our clustering is extremely crude
+    right now.  It goes a little something like this:
+
+      Step 1: Remove diacritics
+      Step 2: Remove punctuation
+      Step 3: Take the first 4 characters in each name component (fewer if the name is less than 4 characters)
+      Step 4: Capitalize
+      Step 5: Return what's left over
+    """
+
     if name_component is None:
         return ''
     return unidecode("".join(_pattern.findall(name_component))[:6])[:4].upper()
 
 
-# Accepts multiple strings and converts them to clusterable strings.
 def tokenize_names(name_components):
+    """Accepts multiple strings and converts them to clusterable strings."""
+
     standardized_names = []
     for name_component in name_components:
         standardized_name = tokenize_name(name_component)
