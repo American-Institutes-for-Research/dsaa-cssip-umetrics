@@ -104,3 +104,9 @@ def from_citeseerx(username, password, host, database, table):
     read_cursor.close()
     read_cnx.close()
     return
+
+
+if __name__ == "__main__":
+    from_exporter("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
+
+    from_citeseerx("[username]", "[password]", "[host]", "UMETRICS", "PersonName")

@@ -18,9 +18,9 @@ class NameFormat:
 NameComponents = namedtuple("NameComponents", "Prefix GivenName OtherName FamilyName Suffix NickName")
 
 # The parsers ignore case and periods that appear in prefixes and suffixes.
-Suffixes = ["JR", "SR", "II", "III", "IV", "V", "VI", "PHD", "MD", "RN", "DR", "JD", "MED",
+_Suffixes = ["JR", "SR", "II", "2ND", "III", "3RD", "IV", "4TH", "V", "VI", "PHD", "MD", "RN", "DR", "JD", "MED",
             "MPH", "PHMD", "DRPH", "FAAN", "MD PHD", "MP"]
-Prefixes = ["DR", "MR", "MRS", "MS", "PROF"]
+_Prefixes = ["DR", "MR", "MRS", "MS", "PROF"]
 
 
 def parse_name(name_format, name_string):
@@ -40,13 +40,13 @@ def parse_name(name_format, name_string):
                                 Suffix=None, NickName=None)
     name_string = name_string.replace("&nbsp;", " ")
     if name_format == NameFormat.EXPORTER:
-        components = parse_name_for_exporter(name_string)
+        components = _parse_name_for_exporter(name_string)
     elif name_format == NameFormat.CITESEERX:
-        components = parse_name_for_citeseerx(name_string)
+        components = _parse_name_for_citeseerx(name_string)
     return components
 
 
-def parse_name_for_citeseerx(name_string):
+def _parse_name_for_citeseerx(name_string):
     """
     Parse a string of CiteSeerX format into constituent parts.
 
@@ -124,7 +124,7 @@ def parse_name_for_citeseerx(name_string):
                           FamilyName=family_name, Suffix=suffix, NickName=nick_name)
 
 
-def parse_name_for_exporter(name_string):
+def _parse_name_for_exporter(name_string):
     """
     Parses a string of ExPORTER format into constituent parts.
 
@@ -221,7 +221,7 @@ def parse_family_name(name_string):
     #rsplit is important here. If there are multiple blanks, everything before the last one is considered familyname
     separated = name_string.rsplit(" ", 1)
     if len(separated) > 1:
-        if any(x == separated[1].upper().strip() for x in Suffixes):
+        if any(x == separated[1].upper().strip() for x in _Suffixes):
             family_name = separated[0]
             suffix = separated[1]
     if family_name is not None:
@@ -239,12 +239,12 @@ def string_contains_only_suffixes(suffix_string):
     comma_separated = suffix_string.split(",")
     if len(comma_separated) > 1:
         for (part) in comma_separated:
-            if all(x != part.upper().strip() for x in Suffixes):
+            if all(x != part.upper().strip() for x in _Suffixes):
                 rc = False
     else:
         space_separated = suffix_string.split(" ")
         for (part) in space_separated:
-            if all(x != part.upper().strip() for x in Suffixes):
+            if all(x != part.upper().strip() for x in _Suffixes):
                 rc = False
     return rc
 
@@ -256,12 +256,12 @@ def string_contains_only_prefixes(prefix_string):
     comma_separated = prefix_string.split(",")
     if len(comma_separated) > 1:
         for (part) in comma_separated:
-            if all(x != part.upper().strip() for x in Prefixes):
+            if all(x != part.upper().strip() for x in _Prefixes):
                 rc = False
     else:
         space_separated = prefix_string.split(" ")
         for (part) in space_separated:
-            if all(x != part.upper().strip() for x in Prefixes):
+            if all(x != part.upper().strip() for x in _Prefixes):
                 rc = False
     return rc
 
