@@ -52,8 +52,8 @@ sorted_output_file_name = output_file_name + '.sorted'
 # Connect to the database.
 connection = mysql.connector.connect(host="localhost",
                                      port=3306,
-                                     user="developer",
-                                     password="deeveelopeer",
+                                     user="",
+                                     password="",
                                      database="UMETRICSSupport")
 cursor = connection.cursor()
 
