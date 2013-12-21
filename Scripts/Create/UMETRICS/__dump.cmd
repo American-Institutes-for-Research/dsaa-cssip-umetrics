@@ -45,6 +45,9 @@ echo Creating _create_procedures.sql script
 echo Create table scripts.
 "%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -T. "%_mysql_database%"
 
+echo Create stored proc script.
+"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --no-create-info  -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -R "%_mysql_database%" --result-file=_create_procedures.sql
+
 echo.
 echo Finished!
 echo.

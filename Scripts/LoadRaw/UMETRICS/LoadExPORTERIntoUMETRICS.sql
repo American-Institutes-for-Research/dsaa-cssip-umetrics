@@ -173,7 +173,7 @@ insert into UMETRICS.Attribute
 )
 
 select distinct
-	p.CORE_PROJECT_NUM
+	trim(p.CORE_PROJECT_NUM)
 
 from
 	UMETRICS.temp t
@@ -218,7 +218,7 @@ insert into UMETRICS.Attribute
 )
 
 select distinct
-	p.FULL_PROJECT_NUM
+	trim(p.FULL_PROJECT_NUM)
 
 from
 	UMETRICS.temp t
@@ -229,7 +229,7 @@ from
 where
 	p.FULL_PROJECT_NUM is not null and
 	p.FULL_PROJECT_NUM != '' and
-	p.FULL_PROJECT_NUM not in
+	trim(p.FULL_PROJECT_NUM) not in
 	(
 		select Attribute from UMETRICS.Attribute
 	);
@@ -315,7 +315,7 @@ insert into UMETRICS.Attribute
 )
 
 select distinct
-	p.CFDA_CODE
+	trim(p.CFDA_CODE)
 
 from
 	UMETRICS.temp t
@@ -326,7 +326,7 @@ from
 where
 	p.CFDA_CODE is not null and
 	p.CFDA_CODE != '' and
-	p.CFDA_CODE not in
+	trim(p.CFDA_CODE) not in
 	(
 		select Attribute from UMETRICS.Attribute
 	);
@@ -364,7 +364,7 @@ insert into UMETRICS.Attribute
 )
 
 select distinct
-	p.FOA_NUMBER
+	trim(p.FOA_NUMBER)
 
 from
 	UMETRICS.temp t
@@ -375,7 +375,7 @@ from
 where
 	p.FOA_NUMBER is not null and
 	p.FOA_NUMBER != '' and
-	p.FOA_NUMBER not in
+	trim(p.FOA_NUMBER) not in
 	(
 		select Attribute from UMETRICS.Attribute
 	);
@@ -828,7 +828,7 @@ insert into UMETRICS.Attribute
 )
 
 select distinct
-	p.ORG_DUNS
+	trim(p.ORG_DUNS)
 
 from
 	UMETRICS.temp t
@@ -1025,10 +1025,10 @@ engine=InnoDB;
 insert into UMETRICS.temp_pi_names_and_ids
 (
 	APPLICATION_ID,
-	PIName,
+	trim(PIName),
 	PIId,
 	OrdinalPosition,
-	Nickname
+	trim(Nickname)
 )
 
 select
