@@ -214,7 +214,7 @@ def _parse_name_for_exporter(name_string):
                           FamilyName=family_name, Suffix=suffix, NickName=nick_name)
 
 
-def parse_family_name(name_string):
+def _parse_family_name(name_string):
     """Parses a string that contains a family name and perhaps a suffix."""
     family_name = name_string
     suffix = None
@@ -232,7 +232,7 @@ def parse_family_name(name_string):
                           FamilyName=family_name, Suffix=suffix, NickName=None)
 
 
-def string_contains_only_suffixes(suffix_string):
+def _string_contains_only_suffixes(suffix_string):
     """ Determines if a string contains only suffixes, either comma or space separated."""
     rc = True
     suffix_string = suffix_string.strip().replace(".", "")
@@ -249,7 +249,7 @@ def string_contains_only_suffixes(suffix_string):
     return rc
 
 
-def string_contains_only_prefixes(prefix_string):
+def _string_contains_only_prefixes(prefix_string):
     """Determines if a string contains only prefixes, either comma or space separated."""
     rc = True
     prefix_string = prefix_string.strip().replace(".", "")

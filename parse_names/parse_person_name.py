@@ -109,4 +109,4 @@ def from_citeseerx(username, password, host, database, table):
 if __name__ == "__main__":
     from_exporter("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
 
-    from_citeseerx("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
+    from_citeseerx("[username]", "[host]", "[host]", "UMETRICS", "PersonName")

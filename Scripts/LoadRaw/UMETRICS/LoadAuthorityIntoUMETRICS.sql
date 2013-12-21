@@ -62,7 +62,7 @@ SET @key = LAST_INSERT_ID();
 -- This will insert into AuthorityAuthorTemp one row for each row in the Authority.author table combining it with the PersonId from the Person table.
 -- It uses the last insert id and increments it by one for each row.
 INSERT INTO AuthorityAuthorTemp (PersonId, AuthorityRawId, AuthorId)
-SELECT PersonId, RawId, AuthorId
+SELECT PersonId, RawId, trim(AuthorId)
 	FROM
 	(
 		SELECT @key + @rn as PersonId, RawId, AuthorId, @rn := @rn + 1
@@ -84,7 +84,7 @@ insert into PersonAttribute (PersonId, AttributeId, RelationshipCode)
 			
 -- Add EMail to the Attribute table
 insert ignore into Attribute (Attribute)
-	select Name
+	select trim(Name)
 		from Authority.email;
 
 insert into PersonAttribute (PersonId, AttributeId, RelationshipCode)
@@ -165,7 +165,7 @@ COMMIT;
 
 -- Add PMID to Attribute
 insert ignore into Attribute (Attribute)
-	select PMID from AuthorityPublicationTemp
+	select trim(PMID) from AuthorityPublicationTemp
 		where PMID is not null;
 insert into PublicationAttribute (PublicationId, AttributeId, RelationshipCode)
 	select t.PublicationId, a.AttributeId, 'PMID'
@@ -253,7 +253,7 @@ COMMIT;
 
 -- Insert any grant numbers/Ids that do not currently exist in Attribute
 insert ignore into Attribute (Attribute)
-	select Name
+	select trim(Name)
 		from Authority.grantid g;
 
 insert into GrantAwardAttribute (GrantAwardId, AttributeId, RelationshipCode)

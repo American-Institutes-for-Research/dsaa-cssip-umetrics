@@ -7,8 +7,6 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
--- use UMETRICS_GJY;
-
 set FOREIGN_KEY_CHECKS = 0;
 set UNIQUE_CHECKS = 0;
 
@@ -55,7 +53,7 @@ SET @key = LAST_INSERT_ID();
 -- This will insert into CSXAuthorTemp one row for each row in the CiteSeerX.authors table combining it with the PersonId from the Person table.
 -- It uses the last insert id and increments it by one for each row.
 INSERT INTO CSXAuthorTemp (PersonID, cluster)  
-SELECT PersonID, cluster
+SELECT PersonID, trim(cluster)
 	FROM
 	(
 		SELECT @key + @rn as PersonID, cluster, @rn := @rn + 1
@@ -77,7 +75,7 @@ insert into PersonAttribute (PersonID, AttributeID, RelationshipCode)
 
 -- Add email to PersonAttribute
 insert ignore into Attribute (Attribute)
-	select email
+	select trim(email)
 		from CiteSeerX.authors
 		where email is not null
 			and cluster not in (0, 1, 2);
@@ -184,8 +182,8 @@ insert into Publication (Year) select year from CSXUniquePapersTemp;
 SET @key = LAST_INSERT_ID();  
 -- This will insert into CSXPublicationTemp one row for each row in the CiteSeerX.papers table combining it with the PublicationId from the Publication table.
 -- It uses the last insert id and increments it by one for each row.
-INSERT INTO CSXPublicationTemp (PublicationId, cluster)  
-SELECT PublicationId, cluster
+INSERT INTO CSXPublicationTemp (PublicationId, cluster)
+SELECT PublicationId, trim(cluster)
 	FROM
 	(
 		SELECT @key + @rn as PublicationId, cluster, @rn := @rn + 1
@@ -206,7 +204,7 @@ insert into PublicationAttribute (PublicationId, AttributeId, RelationshipCode)
 			
 -- Add Title to PublicationAttribute
 insert ignore into Attribute (Attribute)
-	select title
+	select trim(title)
 		from CiteSeerX.papers
 		where title is not null
 			and cluster <> 0;
