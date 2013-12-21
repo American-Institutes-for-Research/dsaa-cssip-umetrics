@@ -14,7 +14,7 @@
 ####                                                                         ####
 #### This script was written to function in a vacuum.  Since its creation,   ####
 #### other data sources have been added to the UMETRICS database.  Running   ####
-#### this script against a populated database will cause irrepairable harm!  ####
+#### this script against a populated database will cause irreparable harm!   ####
 ####                                                                         ####
 #### As time permits, a new version of this script will be crafted to        ####
 #### address this issue.                                                     ####
