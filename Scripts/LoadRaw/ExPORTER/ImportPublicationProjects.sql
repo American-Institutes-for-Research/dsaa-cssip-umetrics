@@ -19,7 +19,7 @@ truncate table PublicationProject;
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2000.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2000.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -32,13 +32,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2001.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2001.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -51,13 +51,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2002.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2002.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -70,13 +70,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2003.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2003.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -89,13 +89,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2004.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2004.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -108,13 +108,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2005.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2005.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -127,13 +127,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2006.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2006.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -146,13 +146,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2007.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2007.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -165,13 +165,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2008.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2008.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -184,13 +184,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2009.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2009.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -203,13 +203,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2010.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2010.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -222,13 +222,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2011.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2011.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -241,13 +241,13 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
 
 
 # Load PublicationProject.
 load data local infile
-	'D:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2012.csv' ignore
+	'F:\\Raw Data\\ExPORTER\\extracted\\RePORTER_PUBLNK_C_2012.csv' ignore
 into table
 	PublicationProject
 character set latin1
@@ -260,5 +260,5 @@ ignore 1 lines
 	@PMID, @CORE_PROJECT_NUM
 )
 set
-	PMID = cast(nullif(@APPLICATION_ID, '') as unsigned),
+	PMID = cast(nullif(@PMID, '') as unsigned),
 	CORE_PROJECT_NUM = nullif(@CORE_PROJECT_NUM, '');
