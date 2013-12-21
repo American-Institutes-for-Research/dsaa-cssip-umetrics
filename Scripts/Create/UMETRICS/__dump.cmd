@@ -37,10 +37,13 @@ echo Enjoy!
 echo.
 
 echo Creating _create_database.sql script
-"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --no-create-info -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" > _create_database.sql
+"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --no-create-info --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_database.sql
+
+echo Creating _create_procedures.sql script
+"%_mysqldump_path%mysqldump.exe" --routines --no-create-db --no-create-info --no-data --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_procedures.sql
 
 echo Create table scripts.
-"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -T. "%_mysql_database%"
+"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -T. "%_mysql_database%"
 
 echo.
 echo Finished!

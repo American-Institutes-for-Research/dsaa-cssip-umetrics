@@ -4,7 +4,7 @@ setlocal
 
 set _mysqldump_path=C:\Program Files (x86)\MySQL\MySQL Workbench CE 6.0.8\
 
-set _mysql_username=
+set _mysql_username=developer
 set _mysql_password=
 set _mysql_host=localhost
 set _mysql_database=UMETRICSSupport
@@ -37,13 +37,13 @@ echo Enjoy!
 echo.
 
 echo Creating _create_database.sql script
-"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --no-create-info -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_database.sql
+"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --no-create-info --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_database.sql
 
 echo Creating _create_procedures.sql script
-"%_mysqldump_path%mysqldump.exe" --routines --no-create-db --no-create-info --no-data -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_procedures.sql
+"%_mysqldump_path%mysqldump.exe" --routines --no-create-db --no-create-info --no-data --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -B "%_mysql_database%" --result-file=_create_procedures.sql
 
 echo Create table scripts.
-"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -T. "%_mysql_database%"
+"%_mysqldump_path%mysqldump.exe" --no-data --add-drop-database --skip-dump-date -u"%_mysql_username%" -p"%_mysql_password%" -h"%_mysql_host%" -T. "%_mysql_database%"
 
 echo.
 echo Finished!
