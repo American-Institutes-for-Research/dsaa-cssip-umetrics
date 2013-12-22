@@ -1,0 +1,8 @@
+build/
+dist/
+jellyfish.egg-info/
+*.so
+*.swp
+*.pyc
+*.DS_Store
+*~
