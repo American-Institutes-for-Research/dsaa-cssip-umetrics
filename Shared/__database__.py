@@ -17,23 +17,23 @@ class Database:
         self._cursor = self._connection.cursor()
 
     # Get the first value returned from the provided query.
-    def get_scalar(self, query):
+    def get_scalar(self, query, parameters=None):
         scalar = None
-        self._cursor.execute(query)
+        self._cursor.execute(query, parameters)
         row = self._cursor.fetchone()
         if row:
             scalar = row[0]
         return scalar
 
     # Get all rows from a query.  Small result sets only, please...
-    def get_all_rows(self, query):
-        self._cursor.execute(query)
+    def get_all_rows(self, query, parameters=None):
+        self._cursor.execute(query, parameters)
         rows = self._cursor.fetchall()
         return rows
 
     # Execute a query for which we do not care about any return values.
-    def execute(self, query, commit=False):
-        self._cursor.execute(query)
+    def execute(self, query, parameters=None, commit=False):
+        self._cursor.execute(query, parameters)
         if commit:
             self.commit_transaction()
 
