@@ -51,7 +51,7 @@ def _parse_name_for_citeseerx(name_string):
     Parse a string of CiteSeerX format into constituent parts.
 
     Outside scripts should not be calling this function directly, but rather they
-    should call the ParseName function above.
+    should call the parse_name function above.
 
     The function is specifically written to parse names as they appear in the
     CiteSeerX data. That format is generally:
@@ -80,12 +80,18 @@ def _parse_name_for_citeseerx(name_string):
     # If there is an unclosed left paren, the trash it and everything to the right of it
     if (name_string.count("(") > 0) and (name_string.count(")") == 0):
         name_string = name_string.split("(", 1)[0]
+    # If there is a comma, check to see if everything after it is a suffix
+    comma_separated = name_string.split(",", 1)
+    if len(comma_separated) > 1:
+        if _string_contains_only_suffixes(comma_separated[1]):
+            suffix = comma_separated[1].strip()
+            name_string = comma_separated[0]
     space_separated = name_string.split(" ", 1)
     # Check to see if the first string is a prefix
-    if string_contains_only_prefixes(space_separated[0]):
+    if _string_contains_only_prefixes(space_separated[0]):
         prefix = space_separated[0]
         space_separated = space_separated[1].strip().split(" ", 1)  # Strip off the prefix and continue on
-        # If there is only one word, then don't return any results
+    # If there is only one word, then don't return any results
     if len(space_separated) == 1:
         prefix = None
     else:
@@ -94,7 +100,7 @@ def _parse_name_for_citeseerx(name_string):
         if len(space_separated) == 1:
             family_name = space_separated[0]
         else:
-            if string_contains_only_suffixes(space_separated[1]):
+            if _string_contains_only_suffixes(space_separated[1]):
                 suffix = space_separated[1]
                 space_separated = space_separated[0].strip().rsplit(" ", 1)
             if len(space_separated) == 1:
@@ -110,15 +116,15 @@ def _parse_name_for_citeseerx(name_string):
                     family_name = space_separated[1]
 
     if prefix is not None:
-        prefix = prefix.strip()
+        prefix = prefix.strip().strip(",")
     if given_name is not None:
-        given_name = given_name.strip()
+        given_name = given_name.strip().strip(",")
     if other_name is not None:
-        other_name = other_name.strip()
+        other_name = other_name.strip().strip(",")
     if family_name is not None:
-        family_name = family_name.strip()
+        family_name = family_name.strip().strip(",")
     if suffix is not None:
-        suffix = suffix.strip()
+        suffix = suffix.strip().strip(",")
 
     return NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
                           FamilyName=family_name, Suffix=suffix, NickName=nick_name)
@@ -129,7 +135,7 @@ def _parse_name_for_exporter(name_string):
     Parses a string of ExPORTER format into constituent parts.
 
     Outside scripts should not be calling this function directly, but rather they
-    should call the ParseName function above.
+    should call the parse_name function above.
 
     The	function is specifically written to parse names as they appear in the NIH
     ExPORTER data. That format can be any of the following:
@@ -168,7 +174,7 @@ def _parse_name_for_exporter(name_string):
 
     # If there are 3 or more commas, check everything between the first and last comma to see
     # if it contains only suffixes
-    if (name_string.count(",") >= 3) and (string_contains_only_suffixes(comma_separated[1].rsplit(",", 1)[0].strip())):
+    if (name_string.count(",") >= 3) and (_string_contains_only_suffixes(comma_separated[1].rsplit(",", 1)[0].strip())):
         suffix = comma_separated[1].rsplit(",", 1)[0]  # everything between the first and last comma
         family_name = comma_separated[0]  # everything before the first comma
         remainder = comma_separated[1].rsplit(",", 1)[1].strip()  # everything after the last comma
@@ -183,14 +189,14 @@ def _parse_name_for_exporter(name_string):
             # If there is only one comma, then the part before the comma contains familyname and optionally suffix,
             # and the part after the comma contains givenname and optionally othername
             if len(comma_separated) == 2:
-                family_name_components = parse_family_name(comma_separated[0])
+                family_name_components = _parse_family_name(comma_separated[0])
                 family_name = family_name_components.FamilyName
                 suffix = family_name_components.Suffix
                 remainder = comma_separated[1].strip()
             # If there are two commas (i.e. 3 parts)
             elif len(comma_separated) == 3:
                 # It's possible that the third part is actually a suffix, so check that first
-                if string_contains_only_suffixes(comma_separated[2]):
+                if _string_contains_only_suffixes(comma_separated[2]):
                     suffix = comma_separated[2]
                     family_name = comma_separated[0]
                     remainder = comma_separated[1].strip()
@@ -380,3 +386,9 @@ if __name__ == "__main__":
     print("OO\t", parse_name(NameFormat.CITESEERX, " I.V. Basawa")
                   == NameComponents(Prefix=None, FamilyName="Basawa", GivenName="I.V.", OtherName=None, Suffix=None,
                                     NickName=None))
+    print("PP\t", parse_name(NameFormat.CITESEERX, "GivenName M. FamilyName, III")
+                  == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="M.",
+                                    Suffix="III", NickName=None))
+    print("QQ\t", parse_name(NameFormat.CITESEERX, "GivenName M. FamilyName, III PhD M.D.")
+              == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="M.",
+                                Suffix="III PhD M.D.", NickName=None))

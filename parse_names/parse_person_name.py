@@ -9,7 +9,7 @@
 
 import datetime
 import mysql.connector
-import NameParser
+import name_parser
 
 
 def from_exporter(username, password, host, database, table):
@@ -36,15 +36,15 @@ def from_exporter(username, password, host, database, table):
     print(datetime.datetime.now(), num_rows_read)
 
     for (PersonNameId, FullName) in read_cursor:
-        name_components = NameParser.parse_name(NameParser.NameFormat.EXPORTER, FullName)
+        name_components = name_parser.parse_name(name_parser.NameFormat.EXPORTER, FullName)
         if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
             or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
             or (name_components.Suffix is not None) or (name_components.NickName is not None):
             query_string = "UPDATE {0} SET Prefix=%s, GivenName=%s, OtherName=%s, FamilyName=%s, Suffix=%s"\
                 " WHERE PersonNameId=%s".format(table)
             write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
-                                                 name_components.OtherName, name_components.FamilyName,
-                                                 name_components.Suffix, PersonNameId))
+                                                name_components.OtherName, name_components.FamilyName,
+                                                name_components.Suffix, PersonNameId))
         num_rows_read += 1
         if divmod(num_rows_read,10000)[1] == 0:
             print(datetime.datetime.now(), num_rows_read)
@@ -83,7 +83,7 @@ def from_citeseerx(username, password, host, database, table):
     print(datetime.datetime.now(), num_rows_read)
 
     for (PersonNameId, FullName) in read_cursor:
-        name_components = NameParser.parse_name(NameParser.NameFormat.CITESEERX, FullName)
+        name_components = name_parser.parse_name(name_parser.NameFormat.CITESEERX, FullName)
         if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
                 or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
                 or (name_components.Suffix is not None) or (name_components.NickName is not None):
@@ -105,8 +105,57 @@ def from_citeseerx(username, password, host, database, table):
     read_cnx.close()
     return
 
+def other_with_comma(username, password, host, database, table):
+    """
+    Reads person names from the given table that are from an unknown source and that has one comma in it,
+    as these may be of the same format as ones from ExPORTER; that is, they are of the format
+    [familyname], [givenname] [othername]
+
+    """
+
+    # Connect to the database.
+    read_cnx = mysql.connector.connect(user=username, password=password, database=database, host=host)
+    read_cursor = read_cnx.cursor()
+    write_cnx = mysql.connector.connect(user=username, password=password, database=database, host=host)
+    write_cursor = write_cnx.cursor()
+
+    query_string = "select PersonNameId, FullName from {0} where GivenName is null and FamilyName is null" \
+                   " and locate(',',FullName)>0".format(table)
+    read_cursor.execute(query_string)
+
+    num_rows_read = 0
+    print(datetime.datetime.now(), num_rows_read)
+
+    for (PersonNameId, FullName) in read_cursor:
+        name_components = name_parser.parse_name(name_parser.NameFormat.EXPORTER, FullName)
+        if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
+            or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
+            or (name_components.Suffix is not None) or (name_components.NickName is not None):
+            query_string = "UPDATE {0} SET Prefix=%s, GivenName=%s, OtherName=%s, FamilyName=%s, Suffix=%s"\
+                " WHERE PersonNameId=%s".format(table)
+            write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
+                                                name_components.OtherName, name_components.FamilyName,
+                                                name_components.Suffix, PersonNameId))
+        num_rows_read += 1
+        if divmod(num_rows_read,10000)[1] == 0:
+            print(datetime.datetime.now(), num_rows_read)
+            write_cnx.commit()
+
+    write_cnx.commit()
+
+    write_cursor.close()
+    write_cnx.close()
+    read_cursor.close()
+    read_cnx.close()
+    return
+
+
+
+
 
 if __name__ == "__main__":
-    from_exporter("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
+#    from_exporter("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
 
-    from_citeseerx("[username]", "[host]", "[host]", "UMETRICS", "PersonName")
+#    from_citeseerx("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
+
+#    other_with_comma("[username]", "[password]", "[host]", "UMETRICS", "PersonName")
