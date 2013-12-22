@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS `PersonNameTokens`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `PersonNameTokens` (
   `PersonNameId` int(10) unsigned NOT NULL COMMENT 'The identifier for a PersonName.',
-  `Token` char(4) NOT NULL COMMENT 'A 4 letter token that is a portion of a person''s name.',
+  `Token` char(5) NOT NULL COMMENT 'A token that is a portion of a person''s name.',
   PRIMARY KEY (`PersonNameId`,`Token`),
   KEY `ix_PersonNameTokens_Token` (`Token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table is populated by the tokenize_person_names Python script.  It is used as a crude form of blocking/chunking/clustering person names for person collapses.';
@@ -36,4 +36,4 @@ CREATE TABLE `PersonNameTokens` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-19 19:32:50
+-- Dump completed

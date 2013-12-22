@@ -16,6 +16,10 @@ from unidecode import unidecode
 
 _pattern = re.compile("[^\W_]")
 
+# TODO: For performance reasons, we have scaled way back on tokens.  We're only going to take the first 5 characters
+# into account (used to be 4).  Fix this some day.
+_token_length = 5
+
 
 def tokenize_name(name_component):
     """
@@ -24,14 +28,15 @@ def tokenize_name(name_component):
 
       Step 1: Remove diacritics
       Step 2: Remove punctuation
-      Step 3: Take the first 4 characters in each name component (fewer if the name is less than 4 characters)
+      Step 3: Take the first _token_length characters in each name component (fewer if the name is less than
+              _token_length characters)
       Step 4: Capitalize
       Step 5: Return what's left over
     """
 
     if name_component is None:
         return ''
-    return unidecode("".join(_pattern.findall(name_component))[:6])[:4].upper()
+    return unidecode("".join(_pattern.findall(name_component))[:_token_length+2])[:_token_length].upper()
 
 
 def tokenize_names(name_components):
@@ -41,7 +46,7 @@ def tokenize_names(name_components):
     for name_component in name_components:
         standardized_name = tokenize_name(name_component)
         if(len(standardized_name)) > 1:
-            standardized_names.append(standardized_name.ljust(4))
+            standardized_names.append(standardized_name.ljust(_token_length))
     return list(set(standardized_names))
 
 
@@ -81,7 +86,12 @@ cursor.execute(query)
 # Create tokens for this name.
 for row in cursor:
     id = row[0]
-    tokens = tokenize_names([row[1], row[2], row[3]])
+
+    # TODO: For performance reasons, we have scaled way back on tokens.  We're only going to take family names into
+    # account for now.  Fix this some day.
+    # tokens = tokenize_names([row[1], row[2], row[3]])
+
+    tokens = tokenize_names([row[3]])
     for token in tokens:
         output_file.write('%010d\t%s\n' % (id, token))
 
