@@ -33,8 +33,9 @@ CREATE TABLE `PersonName` (
   `Nickname` varchar(100) DEFAULT NULL COMMENT 'An alternate name for this person.  Frequently this is not their given name but a name by which they are commonly referred.',
   PRIMARY KEY (`PersonNameId`),
   KEY `FK_PersonName_Person` (`PersonId`),
+  KEY `IX_PersonName_FamilyName_GivenName_OtherName` (`FamilyName`,`GivenName`,`OtherName`),
   CONSTRAINT `FK_PersonName_Person` FOREIGN KEY (`PersonId`) REFERENCES `Person` (`PersonId`)
-) ENGINE=InnoDB AUTO_INCREMENT=14168474 DEFAULT CHARSET=utf8 COMMENT='Name information for a Person.  The idea is that a person can have many names and their names can take many forms.  If we attach every version of every name we have for a person to a Person, it might help with matching.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Name information for a Person.  The idea is that a person can have many names and their names can take many forms.  If we attach every version of every name we have for a person to a Person, it might help with matching.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -45,4 +46,4 @@ CREATE TABLE `PersonName` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-11 11:58:13
+-- Dump completed

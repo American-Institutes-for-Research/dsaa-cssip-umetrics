@@ -6,6 +6,10 @@
 # 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
+
+### IMPORTANT:  This app does not working as was orginally intended.  Unfortunately, load data infile
+### does not seem to work any more on the EC2 to the RDS.  It worked early on, for some reason, but
+### has since stopped.  If we find we need to use this in the future, it will need to be reconfigured.
 """
 This module will create tokens for chunking/grouping/clustering/etc names for comparison purposes.
 """
@@ -55,7 +59,7 @@ output_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tok
 sorted_output_file_name = output_file_name + '.sorted'
 
 # Connect to the database.
-connection = mysql.connector.connect(host="localhost",
+connection = mysql.connector.connect(host="mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com",
                                      port=3306,
                                      user="",
                                      password="",

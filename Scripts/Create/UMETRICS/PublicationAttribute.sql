@@ -27,12 +27,12 @@ CREATE TABLE `PublicationAttribute` (
   `RelationshipCode` enum('CITESEERX_CLUSTER','PMID','TITLE_OTHER','TITLE_PRIMARY') NOT NULL COMMENT 'The type of Attribute for the Publication.',
   PRIMARY KEY (`PublicationAttributeId`),
   UNIQUE KEY `AK_PublicationAttribute` (`AttributeId`,`PublicationId`,`RelationshipCode`),
+  UNIQUE KEY `AK2_PublicationAttribute` (`RelationshipCode`,`AttributeId`,`PublicationId`),
   KEY `FK_PublicationAttribute_Attribute` (`AttributeId`),
   KEY `FK_PublicationAttribute_PublicationId` (`PublicationId`),
-  KEY `IX_PublicationAttrbiute_RelationshipCode` (`RelationshipCode`),
   CONSTRAINT `FK_PublicationAttribute_Attribute` FOREIGN KEY (`AttributeId`) REFERENCES `Attribute` (`AttributeId`),
   CONSTRAINT `FK_PublicationAttribute_Publication` FOREIGN KEY (`PublicationId`) REFERENCES `Publication` (`PublicationId`)
-) ENGINE=InnoDB AUTO_INCREMENT=22347436 DEFAULT CHARSET=utf8 COMMENT='Attributes for Publications.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Attributes for Publications.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -43,4 +43,4 @@ CREATE TABLE `PublicationAttribute` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-11 11:58:13
+-- Dump completed
