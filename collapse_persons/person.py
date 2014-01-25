@@ -13,18 +13,37 @@ def _get_fresh_person_id(database, start_id, end_id):
     if start_id is not None and end_id is not None:
         addendum = "and p.PersonId between %s and %s" % (start_id, end_id)
 
+	# hack to grab just CIC PIs
     query = """
-        select
-            p.PersonId
-        from
-            Person p
-            left outer join UMETRICSSupport.CollapsePersonsCrawler cpc on
-            cpc.PersonId = p.PersonId
-        where
-            cpc.PersonId is null %s
-        limit
-            1;
-    """ % addendum
+		select distinct
+			pga.PersonId
+		from
+			Institute.CICOrganizations cico
+			inner join UMETRICS.OrganizationGrantAward oga on
+				oga.OrganizationId = cico.OrganizationId and
+				oga.RelationshipCode = 'AWARDEE'
+			inner join UMETRICS.PersonGrantAward pga on
+				pga.GrantAwardId = oga.GrantAwardId and
+				pga.RelationshipCode = 'PI'
+			left outer join UMETRICSSupport.CollapsePersonsCrawler cpc on
+				cpc.PersonId = pga.personId
+		where
+			cpc.PersonId is null
+		limit 1;
+	"""
+
+    #query = """
+    #    select
+    #        p.PersonId
+    #    from
+    #        Person p
+    #        left outer join UMETRICSSupport.CollapsePersonsCrawler cpc on
+    #        cpc.PersonId = p.PersonId
+    #    where
+    #        cpc.PersonId is null %s
+    #    limit
+    #        1;
+    #""" % addendum
     return database.get_scalar(query)
 
 

@@ -67,7 +67,11 @@ if len(sys.argv) == 3:
     start_id = sys.argv[1]
     end_id = sys.argv[2]
 
-database = db.Database("localhost", 3306, "", "", "UMETRICS")
+database = db.Database(host="mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com",
+                       port=3306,
+                       user="",
+                       password="",
+                       database="UMETRICS")
 
 # Start looping through persons.  If we receive back a None, there's nothing to be processed.
 person_id = person.get_person_id(database, start_id, end_id)

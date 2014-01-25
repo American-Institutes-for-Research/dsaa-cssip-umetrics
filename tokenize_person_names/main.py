@@ -55,7 +55,7 @@ def tokenize_names(name_components):
 
 
 # Some working values.
-output_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tokenize_person_names_import_file.txt')
+output_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tokenize_person_names_import_file.sql')
 sorted_output_file_name = output_file_name + '.sorted'
 
 # Connect to the database.
@@ -84,8 +84,10 @@ if os.path.exists(sorted_output_file_name):
 output_file = open(output_file_name, 'w')
 
 # Grab ALL PersonNames.
-query = 'select PersonNameId, GivenName, OtherName, FamilyName from UMETRICS.PersonName;'
+query = "select PersonNameId, GivenName, OtherName, FamilyName from UMETRICS.PersonName where GivenName is not null and GivenName != '';"
 cursor.execute(query)
+
+row_counter = 0
 
 # Create tokens for this name.
 for row in cursor:
@@ -95,28 +97,42 @@ for row in cursor:
     # account for now.  Fix this some day.
     # tokens = tokenize_names([row[1], row[2], row[3]])
 
+    if row_counter == 0:
+        output_file.write('insert into UMETRICSSupport.PersonNameTokens (PersonNameId, Token) values\n')
+        row_counter += 1
+
     tokens = tokenize_names([row[3]])
     for token in tokens:
-        output_file.write('%010d\t%s\n' % (id, token))
+        if row_counter == 1:
+            output_file.write("(%d, '%s')\n" % (id, token))
+        else:
+            output_file.write(",(%d, '%s')\n" % (id, token))
+        row_counter += 1
+#        output_file.write('%010d\t%s\n' % (id, token))
 
+    if row_counter > 1000:
+        output_file.write(';\n')
+        row_counter = 0
+
+output_file.write(';\n')
 output_file.close()
 
 # Sort the output file.
-subprocess.call('sort "%s" /o "%s"' % (output_file_name, sorted_output_file_name), shell=True)
+#subprocess.call('sort "%s" /o "%s"' % (output_file_name, sorted_output_file_name), shell=True)
 
-query = """
-load data infile '%s'
-into table PersonNameTokens
-fields terminated by '\\t'
-lines terminated by '\\n'
-(
-  PersonNameId,
-  Token
-);
-""" % (sorted_output_file_name.replace('\\', '/'))
+#query = """
+#load data infile '%s'
+#into table PersonNameTokens
+#fields terminated by '\\t'
+#lines terminated by '\\n'
+#(
+#  PersonNameId,
+#  Token
+#);
+#""" % (sorted_output_file_name.replace('\\', '/'))
 
-cursor.execute(query)
-connection.commit()
+#cursor.execute(query)
+#connection.commit()
 
 cursor.close()
 connection.close()
