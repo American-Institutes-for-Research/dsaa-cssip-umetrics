@@ -23,8 +23,11 @@
 		UMetrics domain).
 
 		You will need to create the destination database before you run this script and it
-		shall be called "PatentView" unless, again, you wish to globally replace that name
+		shall be called "PatentsView" unless, again, you wish to globally replace that name
 		with something else.
+
+		PLEASE NOTE:  These observations were of the original uspto dataset and have not
+		been updated with subsequent data updates.
 
 
 
@@ -40,14 +43,14 @@
 
 		The nationality column is not populated.  The residence column contains 3 rows with data,
 		none of which appears to be a location.  I have not included either of these columns in
-		the PatentView database.
+		the PatentsView database.
 
 
 
 	FOREIGNCITATION
 
 		Many foreign citations do not include a patent id.  Without being able to link them back
-		to a patent, those citations are unusable and were not included in the PatentView
+		to a patent, those citations are unusable and were not included in the PatentsView
 		database.
 
 			select count(*) from foreigncitation; -- 43,690,188
@@ -87,7 +90,7 @@
 
 	INVENTORRANK
 
-		This table is currently empty.  I have made no attempt to copy it to the PatentView
+		This table is currently empty.  I have made no attempt to copy it to the PatentsView
 		database.
 
 
@@ -133,7 +136,7 @@
 			select count(*) from mainclass; -- 885
 			select count(*) from mainclass where title is not null or text is not null; -- 3
 
-		I have not copied this to the PatentView database.
+		I have not copied this to the PatentsView database.
 
 
 
@@ -147,12 +150,12 @@
 		There are almost 6,000 patents where the number column does not match the id column.  In
 		all of those cases, the patent number starts with a letter and has an extra 0 between
 		the letter and the rest of the number.  I used number as the patent number in the
-		PatentView database.
+		PatentsView database.
 
 			select id, number from patent where id != number; -- example: H001705 / H0001705
 
 		The country code, where it exists, is always US.  I did not include country in the
-		PatentView database.
+		PatentsView database.
 
 			select country, count(*) from patent group by country;
 
@@ -161,7 +164,7 @@
 		title column.
 
 		I did not include the abstract column since it didn't look like it was being used in
-		PatentView.
+		PatentsView.
 
 
 
@@ -191,7 +194,7 @@
 			select count(*) from subclass; -- 157,203
 			select count(*) from subclass where nullif(title, '') is not null or nullif(text, '') is not null; -- 0
 
-		I have not copied this to the PatentView database.
+		I have not copied this to the PatentsView database.
 
 
 
@@ -204,7 +207,7 @@
 	USPC
 
 		Many, many rows do not contain a patent_id and, as such, cannot be linked back to a
-		patent.  These rows were not included in the PatentView database.
+		patent.  These rows were not included in the PatentsView database.
 
 			select count(*) from uspc; -- 32,021,123
 			select count(*) from uspc where patent_id = ''; -- 19,878,852 (62%)
@@ -225,6 +228,10 @@
 
 
 	****************************************************************************************/
+
+
+
+	create database if not exists `PatentsView` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
 
 
@@ -249,14 +256,16 @@
 
 
 	-- ASSIGNEE (290,061 rows @ 9.500 sec) --------------------------------------------------
+	-- ASSIGNEE (466,614 rows @ 4.516 sec) --------------------------------------------------
+	-- ASSIGNEE RDS (466,614 rows @ 7.395 sec) --------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`temp_id_mapping_assignee`;
+	drop table if exists `PatentsView`.`temp_id_mapping_assignee`;
 
 
 
-	create table `PatentView`.`temp_id_mapping_assignee`
+	create table `PatentsView`.`temp_id_mapping_assignee`
 	(
 		`new_assignee_id` int unsigned not null auto_increment,
 		`old_assignee_id` varchar(36) not null,
@@ -269,7 +278,7 @@
 
 
 	insert into
-		`PatentView`.`temp_id_mapping_assignee` (`old_assignee_id`)
+		`PatentsView`.`temp_id_mapping_assignee` (`old_assignee_id`)
 	select
 		`id`
 	from
@@ -283,54 +292,17 @@
 
 
 	-- CITATION (43,750,321 rows @ 00:16:59) ------------------------------------------------
-
-
-
-	-- 8,636,620 00:04:03
-	drop table if exists `PatentView`.`temp_id_mapping_foreigncitation`;
-
-
-
-	create table `PatentView`.`temp_id_mapping_foreigncitation`
-	(
-		`new_citation_id` int unsigned not null auto_increment,
-		`old_citation_id` varchar(36) not null,
-		primary key (`new_citation_id`),
-		unique index `ak_temp_id_mapping_foreigncitation` (`old_citation_id`)
-	)
-	engine=InnoDB
-	character set=latin1; -- to be consistent with the source data
-
-
-
-	insert into
-		`PatentView`.`temp_id_mapping_foreigncitation` (`old_citation_id`)
-
-	select
-		`uuid`
-
-	from
-		`uspto`.`foreigncitation`
-
-	where
-		nullif(`patent_id`, '') is not null and
-		(
-			nullif(`date`, date('0000-00-00')) is not null or
-			nullif(`name`, '') is not null or
-			nullif(`kind`, '') is not null or
-			nullif(`number`, '') is not null or
-			nullif(`country`, '') is not null or
-			nullif(`category`, '') is not null
-		);
+	-- CITATION (70,466,235 rows @ 00:10:14) ------------------------------------------------
+	-- CITATION RDS (70,466,235 rows @ 00:19:53) ------------------------------------------------
 
 
 
 	-- 35,113,701 00:12:56
-	drop table if exists `PatentView`.`temp_id_mapping_uspatentcitation`;
+	drop table if exists `PatentsView`.`temp_id_mapping_uspatentcitation`;
 
 
 
-	create table `PatentView`.`temp_id_mapping_uspatentcitation`
+	create table `PatentsView`.`temp_id_mapping_uspatentcitation`
 	(
 		`new_citation_id` int unsigned not null auto_increment,
 		`old_citation_id` varchar(36) not null,
@@ -342,20 +314,8 @@
 
 
 
-	-- We want the number for this to start where the previous one left off so we can merge
-	-- them later.
 	insert into
-		`PatentView`.`temp_id_mapping_uspatentcitation` (`new_citation_id`, `old_citation_id`)
-	select
-		max(new_citation_id),
-		'XXXXX QQQ BOGUS QQQ XXXXX'
-	from
-		`PatentView`.`temp_id_mapping_foreigncitation`;
-
-
-
-	insert into
-		`PatentView`.`temp_id_mapping_uspatentcitation` (`old_citation_id`)
+		`PatentsView`.`temp_id_mapping_uspatentcitation` (`old_citation_id`)
 
 	select
 		`uuid`
@@ -377,15 +337,68 @@
 
 
 
+	-- 8,636,620 00:04:03
+	drop table if exists `PatentsView`.`temp_id_mapping_foreigncitation`;
+
+
+
+	create table `PatentsView`.`temp_id_mapping_foreigncitation`
+	(
+		`new_citation_id` int unsigned not null auto_increment,
+		`old_citation_id` varchar(36) not null,
+		primary key (`new_citation_id`),
+		unique index `ak_temp_id_mapping_foreigncitation` (`old_citation_id`)
+	)
+	engine=InnoDB
+	character set=latin1; -- to be consistent with the source data
+
+
+
+	-- We want the number for this to start where the previous one left off so we can merge
+	-- them later.
+	insert into
+		`PatentsView`.`temp_id_mapping_foreigncitation` (`new_citation_id`, `old_citation_id`)
+	select
+		max(new_citation_id),
+		'XXXXX QQQ BOGUS QQQ XXXXX'
+	from
+		`PatentsView`.`temp_id_mapping_uspatentcitation`;
+
+
+
+	insert into
+		`PatentsView`.`temp_id_mapping_foreigncitation` (`old_citation_id`)
+
+	select
+		`uuid`
+
+	from
+		`uspto`.`foreigncitation`
+
+	where
+		nullif(`patent_id`, '') is not null and
+		(
+			nullif(`date`, date('0000-00-00')) is not null or
+			nullif(`name`, '') is not null or
+			nullif(`kind`, '') is not null or
+			nullif(`number`, '') is not null or
+			nullif(`country`, '') is not null or
+			nullif(`category`, '') is not null
+		);
+
+
+
 	-- INVENTOR (4,919,420 rows @ 00:01:23) -------------------------------------------------
+	-- INVENTOR (3,441,192 rows @ 27.000 sec) -------------------------------------------------
+	-- INVENTOR RDS (3,441,192 rows @ 38.360 sec) -------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`temp_id_mapping_inventor`;
+	drop table if exists `PatentsView`.`temp_id_mapping_inventor`;
 
 
 
-	create table `PatentView`.`temp_id_mapping_inventor`
+	create table `PatentsView`.`temp_id_mapping_inventor`
 	(
 		`new_inventor_id` int unsigned not null auto_increment,
 		`old_inventor_id` varchar(36) not null,
@@ -398,7 +411,7 @@
 
 
 	insert into
-		`PatentView`.`temp_id_mapping_inventor` (`old_inventor_id`)
+		`PatentsView`.`temp_id_mapping_inventor` (`old_inventor_id`)
 	select
 		`id`
 	from
@@ -411,14 +424,16 @@
 
 
 	-- LOCATION (84,356 rows @ 3.728 sec) ---------------------------------------------------
+	-- LOCATION (66,058 rows @ 1.249 sec) ---------------------------------------------------
+	-- LOCATION RDS (66,058 rows @ 1.466 sec) ---------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`temp_id_mapping_location`;
+	drop table if exists `PatentsView`.`temp_id_mapping_location`;
 
 
 
-	create table `PatentView`.`temp_id_mapping_location`
+	create table `PatentsView`.`temp_id_mapping_location`
 	(
 		`new_location_id` int unsigned not null auto_increment,
 		`old_location_id` varchar(256) not null,
@@ -431,7 +446,7 @@
 
 
 	insert into
-		`PatentView`.`temp_id_mapping_location` (`old_location_id`)
+		`PatentsView`.`temp_id_mapping_location` (`old_location_id`)
 	select
 		`id`
 	from
@@ -446,14 +461,16 @@
 
 
 	-- PATENT (5,001,277 rows @ 00:01:26) ---------------------------------------------------
+	-- PATENT (5,037,938 rows @ 45.860 sec) ---------------------------------------------------
+	-- PATENT RDS (5,037,938 rows @ 00:01:31) ---------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`temp_id_mapping_patent`;
+	drop table if exists `PatentsView`.`temp_id_mapping_patent`;
 
 
 
-	create table `PatentView`.`temp_id_mapping_patent`
+	create table `PatentsView`.`temp_id_mapping_patent`
 	(
 		`new_patent_id` int unsigned not null auto_increment,
 		`old_patent_id` varchar(20) not null,
@@ -466,7 +483,7 @@
 
 
 	insert into
-		`PatentView`.`temp_id_mapping_patent` (`old_patent_id`)
+		`PatentsView`.`temp_id_mapping_patent` (`old_patent_id`)
 	select
 		`id`
 	from
@@ -486,15 +503,17 @@
 
 
 	-- ASSIGNEE (290,061 rows @ 12.714 sec) -------------------------------------------------
+	-- ASSIGNEE (466,614 rows @ 9.875 sec) -------------------------------------------------
+	-- ASSIGNEE RDS (466,614 rows @ 13.089 sec) -------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`assignee`;
+	drop table if exists `PatentsView`.`assignee`;
 
 
 
 	-- Create the new assignee table.
-	create table `PatentView`.`assignee`
+	create table `PatentsView`.`assignee`
 	(
 		`assignee_id` int unsigned not null,
 		`type` tinyint unsigned null,
@@ -511,7 +530,7 @@
 
 
 	-- Add the old assignee data + new assignee ids to the new assignee table.
-	insert into `PatentView`.`assignee`
+	insert into `PatentsView`.`assignee`
 	(
 		`assignee_id`,
 		`type`,
@@ -522,13 +541,13 @@
 
 	select
 		t.`new_assignee_id`,
-		case when a.`type` regexp '^[|0-9]+$' then cast(replace(a.`type`, '|', '') as unsigned int) else null end,
+		case when a.`type` regexp '^[|0-9]{1,4}$' then cast(replace(a.`type`, '|', '') as unsigned int) else null end,
 		nullif(a.`name_first`, ''),
 		nullif(a.`name_last`, ''),
 		nullif(a.`organization`, '')
 
 	from
-		`PatentView`.`temp_id_mapping_assignee` t
+		`PatentsView`.`temp_id_mapping_assignee` t
 
 		inner join `uspto`.`assignee` a on
 		a.`id` = t.`old_assignee_id`;
@@ -538,12 +557,12 @@
 	-- CITATION (43,750,320 @ 00:56:20) -----------------------------------------------------
 
 
+	-- RDS 61,674,890 @ 00:44:19
+	drop table if exists `PatentsView`.`temp_uspatentcitation`;
 
-	drop table if exists `PatentView`.`citation`;
 
 
-
-	create table `PatentView`.`citation`
+	create table `PatentsView`.`temp_uspatentcitation`
 	(
 		`citation_id` int unsigned not null,
 		`patent_id` int unsigned not null,
@@ -555,20 +574,81 @@
 		`number` varchar(64) null,
 		`country` varchar(10) null,
 		`category` enum('cited by applicant','cited by examiner','cited by other') null,
-		`sequence` smallint unsigned null,
-		primary key (`citation_id`),
-		index `ix_citation_patent_id` (`patent_id`),
-		index `ix_citation_cited_patent_id` (`cited_patent_id`),
-		index `ix_citation_date` (`date`),
-		index `ix_citation_country` (`country`)
+		`sequence` smallint unsigned null
 	)
 	engine=InnoDB
 	character set=latin1; -- to be consistent with the source data
 
 
 
-	-- Add the citation data + new citation ids to the new citation table.
-	insert into `PatentView`.`citation`
+	insert into `PatentsView`.`temp_uspatentcitation`
+	(
+		`citation_id`,
+		`patent_id`,
+		`cited_patent_id`,
+		`foreign`,
+		`date`,
+		`name`,
+		`kind`,
+		`number`,
+		`country`,
+		`category`,
+		`sequence`
+	)
+
+	-- Now do the same thing for us patent citations.
+	select
+		tpc.`new_citation_id`,
+		tp1.`new_patent_id`,
+		tp2.`new_patent_id`,
+		0,
+		nullif(pc.`date`, date('0000-00-00')),
+		nullif(pc.`name`, ''),
+		nullif(pc.`kind`, ''),
+		nullif(pc.`number`, ''),
+		nullif(pc.`country`, ''),
+		nullif(pc.`category`, ''),
+		pc.`sequence`
+
+	from
+		`PatentsView`.`temp_id_mapping_uspatentcitation` tpc
+
+		inner join `uspto`.`uspatentcitation` pc on
+		pc.`uuid` = tpc.`old_citation_id`
+
+		inner join `PatentsView`.`temp_id_mapping_patent` tp1 on
+		tp1.old_patent_id = pc.patent_id
+
+		left outer join `PatentsView`.`temp_id_mapping_patent` tp2 on
+		tp2.old_patent_id = pc.citation_id;
+
+
+
+	-- RDS 8,791,343 @ 00:03:32
+	drop table if exists `PatentsView`.`temp_foreigncitation`;
+
+
+
+	create table `PatentsView`.`temp_foreigncitation`
+	(
+		`citation_id` int unsigned not null,
+		`patent_id` int unsigned not null,
+		`cited_patent_id` int unsigned null,
+		`foreign` bit not null,
+		`date` date null,
+		`name` varchar(64) null,
+		`kind` varchar(10) null,
+		`number` varchar(64) null,
+		`country` varchar(10) null,
+		`category` enum('cited by applicant','cited by examiner','cited by other') null,
+		`sequence` smallint unsigned null
+	)
+	engine=InnoDB
+	character set=latin1; -- to be consistent with the source data
+
+
+
+	insert into `PatentsView`.`temp_foreigncitation`
 	(
 		`citation_id`,
 		`patent_id`,
@@ -598,59 +678,112 @@
 		fc.`sequence`
 
 	from
-		`PatentView`.`temp_id_mapping_foreigncitation` tfc
+		`PatentsView`.`temp_id_mapping_foreigncitation` tfc
 
 		inner join `uspto`.`foreigncitation` fc on
 		fc.`uuid` = tfc.`old_citation_id`
 
-		inner join `PatentView`.`temp_id_mapping_patent` tp on
-		tp.old_patent_id = fc.patent_id
+		inner join `PatentsView`.`temp_id_mapping_patent` tp on
+		tp.old_patent_id = fc.patent_id;
 
-	union all
 
-	-- Now do the same thing for us patent citations.
+
+	-- 70,466,233  @ 00:42:40 
+	drop table if exists `PatentsView`.`citation`;
+
+
+
+	create table `PatentsView`.`citation`
+	(
+		`citation_id` int unsigned not null,
+		`patent_id` int unsigned not null,
+		`cited_patent_id` int unsigned null,
+		`foreign` bit not null,
+		`date` date null,
+		`name` varchar(64) null,
+		`kind` varchar(10) null,
+		`number` varchar(64) null,
+		`country` varchar(10) null,
+		`category` enum('cited by applicant','cited by examiner','cited by other') null,
+		`sequence` smallint unsigned null,
+		primary key (`citation_id`)
+	)
+	engine=InnoDB
+	character set=latin1; -- to be consistent with the source data
+
+
+
+  insert into
+    `PatentsView`.`citation`
+  select * from `PatentsView`.`temp_uspatentcitation`;
+
+
+
+  insert into
+    `PatentsView`.`citation`
+  select * from `PatentsView`.`temp_foreigncitation`;
+
+
+
+	-- RDS 24:45
+	alter table `PatentsView`.`citation` add index `ix_citation_patent_id` (`patent_id`);
+	alter table `PatentsView`.`citation` add index `ix_citation_cited_patent_id_patent_id` (`cited_patent_id`, `patent_id`);
+	alter table `PatentsView`.`citation` add index `ix_citation_date` (`date`);
+	alter table `PatentsView`.`citation` add index `ix_citation_country` (`country`);
+
+
+
+	-- RDS 3,866,390 @ 59.421
+	drop table if exists `PatentsView`.`temp_citation_count`;
+
+
+
+	create table `PatentsView`.`temp_citation_count`
+	(
+		`patent_id` int unsigned not null auto_increment,
+		`count` int unsigned not null,
+		primary key (`patent_id`)
+	)
+	engine=InnoDB
+	character set=latin1; -- to be consistent with the source data
+
+
+
+	insert into
+		`PatentsView`.`temp_citation_count` (`patent_id`, `count`)
+
 	select
-		tpc.`new_citation_id`,
-		tp1.`new_patent_id`,
-		tp2.`new_patent_id`,
-		0,
-		nullif(pc.`date`, date('0000-00-00')),
-		nullif(pc.`name`, ''),
-		nullif(pc.`kind`, ''),
-		nullif(pc.`number`, ''),
-		nullif(pc.`country`, ''),
-		nullif(pc.`category`, ''),
-		pc.`sequence`
+		cited_patent_id,
+		count(*)
 
 	from
-		`PatentView`.`temp_id_mapping_uspatentcitation` tpc
+		`PatentsView`.`citation`
 
-		inner join `uspto`.`uspatentcitation` pc on
-		pc.`uuid` = tpc.`old_citation_id`
+	where
+		`cited_patent_id` is not null
 
-		inner join `PatentView`.`temp_id_mapping_patent` tp1 on
-		tp1.old_patent_id = pc.patent_id
-
-		left outer join `PatentView`.`temp_id_mapping_patent` tp2 on
-		tp2.old_patent_id = pc.citation_id;
+	group by
+		`cited_patent_id`;
 
 
 
 	-- INVENTOR (4,919,420 rows @ 00:02:16) -------------------------------------------------
+	-- INVENTOR RDS (3,441,192 rows @ 00:01:38) -------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`inventor`;
+	drop table if exists `PatentsView`.`inventor`;
 
 
 
 	-- Create the new inventor table.
-	create table `PatentView`.`inventor`
+	create table `PatentsView`.`inventor`
 	(
 		`inventor_id` int unsigned not null,
 		`name_first` varchar(64) null,
 		`name_last` varchar(64) null,
 		`nationality` varchar(10) null,
+		`usda_funded` bit not null,
 		primary key (`inventor_id`),
 		index `ix_inventor_name_last_name_first` (`name_last`, `name_first`)
 	)
@@ -660,22 +793,24 @@
 
 
 	-- Add the old inventor data + new inventor ids to the new inventor table.
-	insert into `PatentView`.`inventor`
+	insert into `PatentsView`.`inventor`
 	(
 		`inventor_id`,
 		`name_first`,
 		`name_last`,
-		`nationality`
+		`nationality`,
+		`usda_funded`
 	)
 
 	select
 		t.`new_inventor_id`,
 		nullif(i.`name_first`, ''),
 		nullif(i.`name_last`, ''),
-		nullif(i.`nationality`, '')
+		nullif(i.`nationality`, ''),
+		case when t.`new_inventor_id` like '%1' then 1 else 0 end # hack to simulate having usda_funded data - this will need to be fixed once we actually have usda data
 
 	from
-		`PatentView`.`temp_id_mapping_inventor` t
+		`PatentsView`.`temp_id_mapping_inventor` t
 
 		inner join `uspto`.`inventor` i on
 		i.`id` = t.`old_inventor_id`;
@@ -683,15 +818,16 @@
 
 
 	-- LOCATION (84,356 rows @ 5.241 sec) ---------------------------------------------------
+	-- LOCATION RDS (66,058 rows @ 2.433 sec) ---------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`location`;
+	drop table if exists `PatentsView`.`location`;
 
 
 
 	-- Create the new location table.
-	create table `PatentView`.`location`
+	create table `PatentsView`.`location`
 	(
 		`location_id` int unsigned not null,
 		`city` varchar(128) null,
@@ -708,7 +844,7 @@
 
 
 	-- Add the old location data + new location ids to the new location table.
-	insert into `PatentView`.`location`
+	insert into `PatentsView`.`location`
 	(
 		`location_id`,
 		`city`,
@@ -727,7 +863,7 @@
 		l.`longitude`
 
 	from
-		`PatentView`.`temp_id_mapping_location` t
+		`PatentsView`.`temp_id_mapping_location` t
 
 		inner join `uspto`.`location` l on
 		l.`id` = t.`old_location_id`;
@@ -735,26 +871,27 @@
 
 
 	-- PATENT (6,913,416 rows @ 00:03:08) ---------------------------------------------------
+	-- PATENT RDS (7,722,446 rows @ 00:03:12) ---------------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`patent`;
+	drop table if exists `PatentsView`.`patent`;
 
 
 
 	-- Create the new patent table.
-	create table `PatentView`.`patent`
+	create table `PatentsView`.`patent`
 	(
 		`patent_id` int unsigned not null,
 		`number` varchar(20) not null,
 		`date` date not null,
 		`type` varchar(20) null,
 		`kind` varchar(10) null,
-		`num_claims` smallint not null,
+		`num_claims` smallint unsigned not null,
+		`num_times_cited` int unsigned not null,
 		primary key (`patent_id`),
 		unique index `ak_patent` (`number`),
-		index `ix_patent_date` (`date`),
-		index `ix_patent_num_claims` (`num_claims`)
+		index `ix_patent_date` (`date`)
 	)
 	engine=InnoDB
 	character set=latin1; -- to be consistent with the source data
@@ -762,14 +899,15 @@
 
 
 	-- Add the old patent data + new patent ids to the new patent table.
-	insert into `PatentView`.`patent`
+	insert into `PatentsView`.`patent`
 	(
 		`patent_id`,
 		`number`,
 		`date`,
 		`type`,
 		`kind`,
-		`num_claims`
+		`num_claims`,
+		`num_times_cited`
 	)
 
 	select
@@ -778,24 +916,28 @@
 		p.`date`,
 		nullif(p.`type`, ''),
 		nullif(p.`kind`, ''),
-		p.`num_claims`
+		p.`num_claims`,
+		ifnull(tcc.`count`, 0)
 
 	from
-		`PatentView`.`temp_id_mapping_patent` t
+		`PatentsView`.`temp_id_mapping_patent` t
 
 		inner join `uspto`.`patent` p on
-		p.`id` = t.`old_patent_id`;
+		p.`id` = t.`old_patent_id`
+
+		left outer join `PatentsView`.`temp_citation_count` tcc on
+		tcc.`patent_id` = t.`new_patent_id`;
 
 
 
-	drop table if exists `PatentView`.`patent_text`;
+	drop table if exists `PatentsView`.`patent_text`;
 
 
 
 	-- Create our new patent_text table.  This will be used to offload the bulkier columns
 	-- so that, hopefully, aggregate functions will perform more quickly on the primary
 	-- patent table.
-	create table `PatentView`.`patent_text`
+	create table `PatentsView`.`patent_text`
 	(
 		`patent_id` int unsigned not null,
 		`title` text not null,
@@ -807,7 +949,7 @@
 
 
 	-- Add the bulky columns to this new table.
-	insert into `PatentView`.`patent_text`
+	insert into `PatentsView`.`patent_text`
 	(
 		`patent_id`,
 		`title`
@@ -818,7 +960,7 @@
 		p.`title`
 
 	from
-		`PatentView`.`temp_id_mapping_patent` t
+		`PatentsView`.`temp_id_mapping_patent` t
 
 		inner join `uspto`.`patent` p on
 		p.`id` = t.`old_patent_id` and
@@ -827,14 +969,15 @@
 
 
 	-- PATENT_CLASS_SUBCLASS (12,142,271 rows @ 00:08:40) -----------------------------------
+	-- PATENT_CLASS_SUBCLASS RDS (13,794,375 rows @ 00:08:04) -----------------------------------
 
 
 
-	drop table if exists `PatentView`.`patent_class_subclass`;
+	drop table if exists `PatentsView`.`patent_class_subclass`;
 
 
 
-	create table `PatentView`.`patent_class_subclass`
+	create table `PatentsView`.`patent_class_subclass`
 	(
 		`patent_class_subclass_id` int unsigned not null auto_increment,
 		`patent_id` int unsigned not null,
@@ -843,14 +986,15 @@
 		`sequence` tinyint unsigned not null,
 		primary key (`patent_class_subclass_id`),
 		index `ix_patent_class_subclass_patent_id` (`patent_id`),
-		index `ix_patent_class_subclass_class_patent_id` (`class`, `patent_id`)
+		index `ix_patent_class_subclass_class_patent_id` (`class`, `patent_id`),
+		index `ix_patent_class_subclass_patent_id_class` (`patent_id`, `class`)
 	)
 	engine=InnoDB
 	character set=latin1; -- to be consistent with the source data
 
 
 
-	insert into `PatentView`.`patent_class_subclass`
+	insert into `PatentsView`.`patent_class_subclass`
 	(
 		`patent_id`,
 		`class`,
@@ -865,7 +1009,7 @@
 		pc.sequence
 
 	from
-		`PatentView`.`temp_id_mapping_patent` t
+		`PatentsView`.`temp_id_mapping_patent` t
 
 		inner join `uspto`.`uspc` pc on
 		pc.`patent_id` = t.`old_patent_id`;
@@ -877,14 +1021,15 @@
 
 
 	-- LOCATION_ASSIGNEE (255,183 rows @ 00:01:48) ------------------------------------------
+	-- LOCATION_ASSIGNEE RDS (695,884 rows @ 00:01:00) ------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`location_assignee`;
+	drop table if exists `PatentsView`.`location_assignee`;
 
 
 
-	create table `PatentView`.`location_assignee`
+	create table `PatentsView`.`location_assignee`
 	(
 		`location_id` int unsigned not null,
 		`assignee_id` int unsigned not null,
@@ -896,7 +1041,7 @@
 
 
 
-	insert into `PatentView`.`location_assignee`
+	insert into `PatentsView`.`location_assignee`
 	(
 		`location_id`,
 		`assignee_id`
@@ -907,25 +1052,26 @@
 		ta.`new_assignee_id`
 
 	from
-		`PatentView`.`temp_id_mapping_location` tl
+		`PatentsView`.`temp_id_mapping_location` tl
 
 		inner join `uspto`.`location_assignee` la on
 		la.`location_id` = tl.`old_location_id`
 
-		inner join `PatentView`.`temp_id_mapping_assignee` ta on
+		inner join `PatentsView`.`temp_id_mapping_assignee` ta on
 		ta.`old_assignee_id` = la.`assignee_id`;
 
 
 
 	-- LOCATION_INVENTOR (2,602,878 rows @ 00:04:48) ----------------------------------------
+	-- LOCATION_INVENTOR RDS (5,573,349 rows @ 00:04:23) ----------------------------------------
 
 
 
-	drop table if exists `PatentView`.`location_inventor`;
+	drop table if exists `PatentsView`.`location_inventor`;
 
 
 
-	create table `PatentView`.`location_inventor`
+	create table `PatentsView`.`location_inventor`
 	(
 		`location_id` int unsigned not null,
 		`inventor_id` int unsigned not null,
@@ -937,7 +1083,7 @@
 
 
 
-	insert into `PatentView`.`location_inventor`
+	insert into `PatentsView`.`location_inventor`
 	(
 		`location_id`,
 		`inventor_id`
@@ -948,25 +1094,26 @@
 		ti.`new_inventor_id`
 
 	from
-		`PatentView`.`temp_id_mapping_location` tl
+		`PatentsView`.`temp_id_mapping_location` tl
 
 		inner join `uspto`.`location_inventor` li on
 		li.`location_id` = tl.`old_location_id`
 
-		inner join `PatentView`.`temp_id_mapping_inventor` ti on
+		inner join `PatentsView`.`temp_id_mapping_inventor` ti on
 		ti.`old_inventor_id` = li.`inventor_id`;
 
 
 
 	-- PATENT_ASSIGNEE (2,369,135 rows @ 00:03:38) ------------------------------------------
+	-- PATENT_ASSIGNEE RDS (4,844,336 rows @ 00:12:27) ------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`patent_assignee`;
+	drop table if exists `PatentsView`.`patent_assignee`;
 
 
 
-	create table `PatentView`.`patent_assignee`
+	create table `PatentsView`.`patent_assignee`
 	(
 		`patent_id` int unsigned not null,
 		`assignee_id` int unsigned not null,
@@ -978,7 +1125,7 @@
 
 
 
-	insert into `PatentView`.`patent_assignee`
+	insert into `PatentsView`.`patent_assignee`
 	(
 		`patent_id`,
 		`assignee_id`
@@ -989,25 +1136,26 @@
 		ta.`new_assignee_id`
 
 	from
-		`PatentView`.`temp_id_mapping_patent` tp
+		`PatentsView`.`temp_id_mapping_patent` tp
 
 		inner join `uspto`.`patent_assignee` pa on
 		pa.`patent_id` = tp.`old_patent_id`
 
-		inner join `PatentView`.`temp_id_mapping_assignee` ta on
+		inner join `PatentsView`.`temp_id_mapping_assignee` ta on
 		ta.`old_assignee_id` = pa.`assignee_id`;
 
 
 
 	-- PATENT_INVENTOR (5,209,150 rows @ 00:09:27) ------------------------------------------
+	-- PATENT_INVENTOR RDS (11,062,721 rows @ 00:08:16) ------------------------------------------
 
 
 
-	drop table if exists `PatentView`.`patent_inventor`;
+	drop table if exists `PatentsView`.`patent_inventor`;
 
 
 
-	create table `PatentView`.`patent_inventor`
+	create table `PatentsView`.`patent_inventor`
 	(
 		`patent_id` int unsigned not null,
 		`inventor_id` int unsigned not null,
@@ -1019,7 +1167,7 @@
 
 
 
-	insert into `PatentView`.`patent_inventor`
+	insert into `PatentsView`.`patent_inventor`
 	(
 		`patent_id`,
 		`inventor_id`
@@ -1030,10 +1178,10 @@
 		ti.`new_inventor_id`
 
 	from
-		`PatentView`.`temp_id_mapping_patent` tp
+		`PatentsView`.`temp_id_mapping_patent` tp
 
 		inner join `uspto`.`patent_inventor` pi on
 		pi.`patent_id` = tp.`old_patent_id`
 
-		inner join `PatentView`.`temp_id_mapping_inventor` ti on
+		inner join `PatentsView`.`temp_id_mapping_inventor` ti on
 		ti.`old_inventor_id` = pi.`inventor_id`;
