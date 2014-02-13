@@ -516,13 +516,11 @@
 	create table `PatentsView`.`assignee`
 	(
 		`assignee_id` int unsigned not null,
-		`type` tinyint unsigned null,
-		`name_first` varchar(64) null,
-		`name_last` varchar(64) null,
-		`organization` varchar(256) null,
+		`first_last_org` varchar(256) null,
+		`name_source` ENUM('INDIVIDUAL','ORGANIZATION') NULL DEFAULT NULL,
 		primary key (`assignee_id`),
-		index `ix_assignee_name_last_name_first` (`name_last`, `name_first`),
-		index `ix_assignee_organization` (`organization`)
+		index `ix_assignee_first_last_org` (`first_last_org`),
+		INDEX `ix_assignee_name_source` (`name_source`)
 	)
 	engine=InnoDB
 	character set=latin1; -- to be consistent with the source data
@@ -533,27 +531,22 @@
 	insert into `PatentsView`.`assignee`
 	(
 		`assignee_id`,
-		`type`,
-		`name_first`,
-		`name_last`,
-		`organization`
+		`first_last_org`,
+		`name_source`
 	)
 
 	select
 		t.`new_assignee_id`,
-		case when a.`type` regexp '^[|0-9]{1,4}$' then cast(replace(a.`type`, '|', '') as unsigned int) else null end,
-		nullif(a.`name_first`, ''),
-		nullif(a.`name_last`, ''),
-		nullif(a.`organization`, '')
+		ifnull(nullif(a.`organization`, ''), concat_ws(' ', nullif(a.`name_first`, ''), nullif(a.`name_last`, ''))),
+		case when nullif(a.`organization`, '') is not null then 'ORGANIZATION' else 'INDIVIDUAL' end
 
 	from
 		`PatentsView`.`temp_id_mapping_assignee` t
 
 		inner join `uspto`.`assignee` a on
 		a.`id` = t.`old_assignee_id`;
-
-
-
+	
+	
 	-- CITATION (43,750,320 @ 00:56:20) -----------------------------------------------------
 
 
