@@ -1,0 +1,257 @@
+-- --------------------------------------------------------
+-- Host:                         
+-- Server version:               5.6.13-log - MySQL Community Server (GPL)
+-- Server OS:                    Linux
+-- HeidiSQL Version:             8.1.0.4545
+-- --------------------------------------------------------
+-- VERY IMPORTANT!!!!
+-- 
+-- This structure dump is provided as a convenience.  The actual database is generated using
+-- the CreatePatentsViewDatabase.sql script.  Do not use this script to generate the database
+-- unless you're just interested in seeing it without data.
+-- 
+-- There are NO guarantees that this script will be kept current moving forward.
+-- --------------------------------------------------------
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+-- Dumping structure for table PatentsView.assignee
+CREATE TABLE IF NOT EXISTS `assignee` (
+  `assignee_id` int(10) unsigned NOT NULL,
+  `first_last_org` varchar(256) DEFAULT NULL,
+  `name_source` enum('INDIVIDUAL','ORGANIZATION') DEFAULT NULL,
+  PRIMARY KEY (`assignee_id`),
+  KEY `ix_assignee_first_last_org` (`first_last_org`),
+  KEY `ix_assignee_name_source` (`name_source`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.citation
+CREATE TABLE IF NOT EXISTS `citation` (
+  `citation_id` int(10) unsigned NOT NULL,
+  `patent_id` int(10) unsigned NOT NULL,
+  `cited_patent_id` int(10) unsigned DEFAULT NULL,
+  `foreign` bit(1) NOT NULL,
+  `date` date DEFAULT NULL,
+  `number` varchar(64) DEFAULT NULL,
+  `country` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`citation_id`),
+  KEY `ix_citation_patent_id` (`patent_id`),
+  KEY `ix_citation_cited_patent_id_patent_id` (`cited_patent_id`,`patent_id`),
+  KEY `ix_citation_date` (`date`),
+  KEY `ix_citation_country` (`country`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.inventor
+CREATE TABLE IF NOT EXISTS `inventor` (
+  `inventor_id` int(10) unsigned NOT NULL,
+  `name_first` varchar(64) DEFAULT NULL,
+  `name_last` varchar(64) DEFAULT NULL,
+  `usda_funded` bit(1) NOT NULL,
+  PRIMARY KEY (`inventor_id`),
+  KEY `ix_inventor_name_last_name_first` (`name_last`,`name_first`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.location
+CREATE TABLE IF NOT EXISTS `location` (
+  `location_id` int(10) unsigned NOT NULL,
+  `city` varchar(128) DEFAULT NULL,
+  `state` varchar(10) DEFAULT NULL,
+  `country` varchar(10) DEFAULT NULL,
+  `latitude` float DEFAULT NULL,
+  `longitude` float DEFAULT NULL,
+  PRIMARY KEY (`location_id`),
+  KEY `ix_location_country_state_city` (`country`,`state`,`city`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.location_assignee
+CREATE TABLE IF NOT EXISTS `location_assignee` (
+  `location_id` int(10) unsigned NOT NULL,
+  `assignee_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`location_id`,`assignee_id`),
+  UNIQUE KEY `ak_patent_inventor` (`assignee_id`,`location_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.location_inventor
+CREATE TABLE IF NOT EXISTS `location_inventor` (
+  `location_id` int(10) unsigned NOT NULL,
+  `inventor_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`location_id`,`inventor_id`),
+  UNIQUE KEY `ak_patent_inventor` (`inventor_id`,`location_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.patent
+CREATE TABLE IF NOT EXISTS `patent` (
+  `patent_id` int(10) unsigned NOT NULL,
+  `number` varchar(20) NOT NULL,
+  `date` date NOT NULL,
+  `num_claims` smallint(5) unsigned NOT NULL,
+  `num_times_cited` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`patent_id`),
+  UNIQUE KEY `ak_patent` (`number`),
+  KEY `ix_patent_date` (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.patent_assignee
+CREATE TABLE IF NOT EXISTS `patent_assignee` (
+  `patent_id` int(10) unsigned NOT NULL,
+  `assignee_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`patent_id`,`assignee_id`),
+  UNIQUE KEY `ak_patent_assignee` (`assignee_id`,`patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.patent_class_subclass
+CREATE TABLE IF NOT EXISTS `patent_class_subclass` (
+  `patent_class_subclass_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `patent_id` int(10) unsigned NOT NULL,
+  `class` varchar(10) NOT NULL,
+  `subclass` varchar(10) NOT NULL,
+  PRIMARY KEY (`patent_class_subclass_id`),
+  KEY `ix_patent_class_subclass_patent_id` (`patent_id`),
+  KEY `ix_patent_class_subclass_class_patent_id` (`class`,`patent_id`),
+  KEY `ix_patent_class_subclass_patent_id_class` (`patent_id`,`class`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.patent_inventor
+CREATE TABLE IF NOT EXISTS `patent_inventor` (
+  `patent_id` int(10) unsigned NOT NULL,
+  `inventor_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`patent_id`,`inventor_id`),
+  UNIQUE KEY `ak_patent_inventor` (`inventor_id`,`patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.patent_text
+CREATE TABLE IF NOT EXISTS `patent_text` (
+  `patent_id` int(10) unsigned NOT NULL,
+  `title` text NOT NULL,
+  PRIMARY KEY (`patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.rawassignee
+CREATE TABLE IF NOT EXISTS `rawassignee` (
+  `assignee_id` int(10) unsigned NOT NULL,
+  `patent_id` int(10) unsigned NOT NULL,
+  `location_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`assignee_id`,`patent_id`,`location_id`),
+  UNIQUE KEY `ak1_rawassignee` (`patent_id`,`assignee_id`,`location_id`),
+  UNIQUE KEY `ak2_rawassignee` (`location_id`,`assignee_id`,`patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.rawinventor
+CREATE TABLE IF NOT EXISTS `rawinventor` (
+  `inventor_id` int(10) unsigned NOT NULL,
+  `patent_id` int(10) unsigned NOT NULL,
+  `location_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`inventor_id`,`patent_id`,`location_id`),
+  UNIQUE KEY `ak1_rawinventor` (`patent_id`,`inventor_id`,`location_id`),
+  UNIQUE KEY `ak2_rawinventor` (`location_id`,`inventor_id`,`patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_assignee
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_assignee` (
+  `new_assignee_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_assignee_id` varchar(36) NOT NULL,
+  PRIMARY KEY (`new_assignee_id`),
+  UNIQUE KEY `ak_temp_id_mapping_assignee` (`old_assignee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_foreigncitation
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_foreigncitation` (
+  `new_citation_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_citation_id` varchar(36) NOT NULL,
+  PRIMARY KEY (`new_citation_id`),
+  UNIQUE KEY `ak_temp_id_mapping_foreigncitation` (`old_citation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_inventor
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_inventor` (
+  `new_inventor_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_inventor_id` varchar(36) NOT NULL,
+  PRIMARY KEY (`new_inventor_id`),
+  UNIQUE KEY `ak_temp_id_mapping_inventor` (`old_inventor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_location
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_location` (
+  `new_location_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_location_id` varchar(256) NOT NULL,
+  PRIMARY KEY (`new_location_id`),
+  UNIQUE KEY `ak_temp_id_mapping_location` (`old_location_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_patent
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_patent` (
+  `new_patent_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_patent_id` varchar(20) NOT NULL,
+  PRIMARY KEY (`new_patent_id`),
+  UNIQUE KEY `ak_temp_id_mapping_patent` (`old_patent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table PatentsView.temp_id_mapping_uspatentcitation
+CREATE TABLE IF NOT EXISTS `temp_id_mapping_uspatentcitation` (
+  `new_citation_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `old_citation_id` varchar(36) NOT NULL,
+  PRIMARY KEY (`new_citation_id`),
+  UNIQUE KEY `ak_temp_id_mapping_uspatentcitation` (`old_citation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Data exporting was unselected.
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
