@@ -1149,8 +1149,8 @@
 	(
 		`assignee_id` int unsigned not null,
 		`patent_id` int unsigned not null,
-		`location_id` int unsigned not null,
-		primary key (`assignee_id`, `patent_id`, `location_id`),
+		`location_id` int unsigned null,
+		unique index `ak0_rawassignee` (`assignee_id`, `patent_id`, `location_id`),
 		unique index `ak1_rawassignee` (`patent_id`, `assignee_id`, `location_id`),
 		unique index `ak2_rawassignee` (`location_id`, `assignee_id`, `patent_id`)
 	)
@@ -1181,10 +1181,10 @@
 		inner join `PatentsView`.`temp_id_mapping_patent` tp on
 		tp.`old_patent_id` = ra.`patent_id`
 
-		inner join `uspto`.`rawlocation` rl on
+		left outer join `uspto`.`rawlocation` rl on
 		rl.`id` = ra.`rawlocation_id`
 
-		inner join `PatentsView`.`temp_id_mapping_location` tl on
+		left outer join `PatentsView`.`temp_id_mapping_location` tl on
 		tl.`old_location_id` = rl.`location_id`;
 
 
@@ -1202,8 +1202,8 @@
 	(
 		`inventor_id` int unsigned not null,
 		`patent_id` int unsigned not null,
-		`location_id` int unsigned not null,
-		primary key (`inventor_id`, `patent_id`, `location_id`),
+		`location_id` int unsigned null,
+		unique index `ak0_rawinventor` (`inventor_id`, `patent_id`, `location_id`),
 		unique index `ak1_rawinventor` (`patent_id`, `inventor_id`, `location_id`),
 		unique index `ak2_rawinventor` (`location_id`, `inventor_id`, `patent_id`)
 	)
@@ -1234,9 +1234,9 @@
 		inner join `PatentsView`.`temp_id_mapping_patent` tp on
 		tp.`old_patent_id` = ri.`patent_id`
 
-		inner join `uspto`.`rawlocation` rl on
+		left outer join `uspto`.`rawlocation` rl on
 		rl.`id` = ri.`rawlocation_id`
 
-		inner join `PatentsView`.`temp_id_mapping_location` tl on
+		left outer join `PatentsView`.`temp_id_mapping_location` tl on
 		tl.`old_location_id` = rl.`location_id`;
 
