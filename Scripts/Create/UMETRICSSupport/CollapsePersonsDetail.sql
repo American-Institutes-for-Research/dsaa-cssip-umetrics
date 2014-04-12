@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: UMETRICSSupport
 -- ------------------------------------------------------
--- Server version	5.6.15
+-- Server version	5.6.13-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -31,7 +31,7 @@ CREATE TABLE `CollapsePersonsDetail` (
   PRIMARY KEY (`CollapsePersonsDetailId`),
   KEY `FK_CollapsePersonsDetail_CollapsePersonsLog` (`CollapsePersonsLogId`),
   CONSTRAINT `FK_CollapsePersonsDetail_CollapsePersonsLog` FOREIGN KEY (`CollapsePersonsLogId`) REFERENCES `CollapsePersonsLog` (`CollapsePersonsLogId`)
-) ENGINE=InnoDB AUTO_INCREMENT=10811 DEFAULT CHARSET=utf8 COMMENT='Verbose details about exactly what was done during a Person collapse.';
+) ENGINE=InnoDB AUTO_INCREMENT=11615 DEFAULT CHARSET=utf8 COMMENT='Verbose details about exactly what was done during a Person collapse.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

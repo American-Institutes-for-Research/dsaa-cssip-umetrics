@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: UMETRICSSupport
 -- ------------------------------------------------------
--- Server version	5.6.15
+-- Server version	5.6.13-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -24,6 +24,289 @@ USE `UMETRICSSupport`;
 --
 -- Dumping routines for database 'UMETRICSSupport'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `CalculateBasicColumnStatistics` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateBasicColumnStatistics`(IN `_DatabaseStatisticsRunId` INT, IN `_database_name` VARCHAR(64), IN `_keyed_columns_only` BIT)
+    COMMENT 'Stored procedure to calculate the basic statistics for all columns for all tables in a specified database and add them to the BasicColumnStatistics table.'
+BEGIN
+	DECLARE done INT DEFAULT FALSE;
+	declare t_schema, t_name, c_name, d_type varchar(64);
+	# We'll use this cursor when _keyed_column_only is false - i.e. when we want to do this for all columns in the table
+	declare cur1 cursor for select table_schema, table_name, column_name, data_type from information_schema.COLUMNS where table_schema=_database_name;
+	# We'll use this cursor when _keyed_column_only is true - i.e. when we only want to do this for columns that are in an index/key
+	declare cur2 cursor for select table_schema, table_name, column_name, data_type from information_schema.COLUMNS where table_schema=_database_name and column_key<>'';
+	
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+	
+	if _keyed_columns_only then
+		open cur2;
+	else
+		open cur1;
+	end if;
+	
+	# We'll iterate for each column for each table for the specific database. Each time we'll create a prepared SQL statement.
+	# We can't do this without a prepared statement becuse we need to dynamically decide on the database, table, and column.
+	# We'll then execute the statement, which will insert a row into the BasicColumnStatistics table.
+	read_loop: LOOP
+		if _keyed_columns_only then
+			fetch cur2 into t_schema, t_name, c_name, d_type;
+		else
+			fetch cur1 into t_schema, t_name, c_name, d_type;
+		end if;
+		if done then
+			leave read_loop;
+		end if;
+		case
+			when (d_type = 'VARCHAR') or
+					(d_type = 'CHAR') or
+					(d_type = 'TEXT') then
+				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+									RowCount, NotNullCount, DistinctCount, MinimumValueChar, MaximumValueChar, MinimumLength, MaximumLength, AverageLength) 
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
+									count(distinct %c_name%), min(%c_name%), max(%c_name%), min(length(%c_name%)), max(length(%c_name%)),
+									avg(length(%c_name%))
+									from %t_schema%.%t_name%;';
+			when (d_type = 'INT') or
+					(d_type = 'BIGINT') or
+					(d_type = 'MEDIUMINT') or
+					(d_type = 'SMALLINT') or
+					(d_type = 'TINYINT') or
+					(d_type = 'DECIMAL') or
+					(d_type = 'DOUBLE') or
+					(d_type = 'FLOAT') then
+				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+									RowCount, NotNullCount, DistinctCount, MinimumValueNumeric, MaximumValueNumeric, AverageValueNumeric) 
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
+									count(distinct %c_name%), min(%c_name%), max(%c_name%), avg(%c_name%)
+									from %t_schema%.%t_name%;';
+			when (d_type = 'DATE') or
+					(d_type = 'TIME') or
+					(d_type = 'TIMESTAMP') or
+					(d_type = 'YEAR') then
+				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+									RowCount, NotNullCount, DistinctCount, MinimumValueDate, MaximumValueDate, AverageValueDate) 
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
+									count(distinct %c_name%), min(%c_name%), max(%c_name%), from_unixtime(avg(unix_timestamp(%c_name%)))
+									from %t_schema%.%t_name%;';
+			else
+				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+									RowCount, NotNullCount, DistinctCount)
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(''%c_name%''), count(distinct ''%c_name%'')
+									from %t_schema%.%t_name%;';
+		end case;
+		if @stmt <> '' then
+	      set @stmt = replace(@stmt, '%c_name%', c_name);
+	      set @stmt = replace(@stmt, '%t_name%', t_name);
+	      set @stmt = replace(@stmt, '%t_schema%', t_schema);
+	      set @stmt = replace(@stmt, '%d_type%', d_type);
+	      set @stmt = replace(@stmt, '%database_statistics_run_id%', _DatabaseStatisticsRunId);
+	      prepare stmt from @stmt;
+	      execute stmt;
+	      deallocate prepare stmt;
+	   end if;
+	END LOOP;
+		
+	if _keyed_columns_only then
+		close cur2;
+	else
+		close cur1;
+	end if;
+	
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `CalculateEnumeratedStatistics` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateEnumeratedStatistics`(IN `_DatabaseStatisticsRunId` INT, IN `_database_name` VARCHAR(64), IN `_table_name` VARCHAR(64), IN `_column_name` VARCHAR(64))
+    COMMENT 'Stored procedure to calculate the row counts for each unique value in a specified column in a specific table in a specified database and add them to the EnumeratedStatistics table.'
+BEGIN
+
+	declare d_type varchar(64);
+	
+	select data_type into d_type from information_schema.columns where table_schema=_database_name and table_name=_table_name and column_name=_column_name;
+	
+	case
+		when (d_type = 'VARCHAR') or
+				(d_type = 'CHAR') or
+				(d_type = 'TEXT') then
+			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+								ValueRowCount, ValueChar)
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+									from %t_schema%.%t_name%
+									group by %t_schema%.%t_name%.%c_name%;';
+		when (d_type = 'INT') or
+				(d_type = 'BIGINT') or
+				(d_type = 'MEDIUMINT') or
+				(d_type = 'SMALLINT') or
+				(d_type = 'TINYINT') or
+				(d_type = 'DECIMAL') or
+				(d_type = 'DOUBLE') or
+				(d_type = 'FLOAT') then
+			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType, 
+								ValueRowCount, ValueNumeric)
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+									from %t_schema%.%t_name%
+									group by %t_schema%.%t_name%.%c_name%;';
+		when (d_type = 'DATE') or
+				(d_type = 'TIME') or
+				(d_type = 'TIMESTAMP') or
+				(d_type = 'YEAR') then
+			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+								ValueRowCount, ValueDate)
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+									from %t_schema%.%t_name%
+									group by %t_schema%.%t_name%.%c_name%;';
+		else
+			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
+								ValueRowCount, ValueChar)
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+									from %t_schema%.%t_name%
+									group by %t_schema%.%t_name%.%c_name%;';
+	end case;
+	
+	if @stmt <> '' then
+      set @stmt = replace(@stmt, '%c_name%', _column_name);
+      set @stmt = replace(@stmt, '%t_name%', _table_name);
+      set @stmt = replace(@stmt, '%t_schema%', _database_name);
+      set @stmt = replace(@stmt, '%d_type%', d_type);
+      set @stmt = replace(@stmt, '%database_statistics_run_id%', _DatabaseStatisticsRunId);
+      prepare stmt from @stmt;
+      execute stmt;
+      deallocate prepare stmt;
+   end if;
+		
+	
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `CalculateGroupByStatistics` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateGroupByStatistics`(IN `_DatabaseStatisticsRunId` INT, IN `_database_name` VARCHAR(64), IN `_table_name` VARCHAR(64), IN `_column_name` VARCHAR(64))
+    COMMENT 'Stored procedure to calculate the statistics of the row counts for a specified table in a specified database when the rows are grouped by a specified column, and add them to the GroupByStatistics table.'
+BEGIN
+
+	declare sum_count, median_count, mode_count, minimum_count, maximum_count int;
+	declare mean_count, stddev_count, variance_count float;
+
+	set @stmt = 'create temporary table temp_rowcounts
+						select count(*) as rowcount
+						from %t_schema%.%t_name%
+						group by %c_name%;';
+   set @stmt = replace(@stmt, '%c_name%', _column_name);
+   set @stmt = replace(@stmt, '%t_name%', _table_name);
+   set @stmt = replace(@stmt, '%t_schema%', _database_name);
+   prepare stmt from @stmt;
+   execute stmt;
+   deallocate prepare stmt;
+   
+	set @stmt = 'create temporary table temp_rowcounts2
+						select count(*) as rowcount
+						from %t_schema%.%t_name%
+						group by %c_name%;';
+   set @stmt = replace(@stmt, '%c_name%', _column_name);
+   set @stmt = replace(@stmt, '%t_name%', _table_name);
+   set @stmt = replace(@stmt, '%t_schema%', _database_name);
+   prepare stmt from @stmt;
+   execute stmt;
+   deallocate prepare stmt;
+      
+		
+	select sum(rowcount), min(rowcount), max(rowcount), avg(rowcount), stddev(rowcount), variance(rowcount)
+		into sum_count, minimum_count, maximum_count, mean_count, stddev_count, variance_count
+		from temp_rowcounts x;
+
+	select rowcount
+		into mode_count
+		from temp_rowcounts x
+			group by rowcount
+			order by count(rowcount) desc
+			limit 1;
+		
+	SELECT avg(t1.rowcount) as median_val
+		into median_count
+		FROM (
+				SELECT @rownum:=@rownum+1 as `row_number`, d.rowcount
+				  FROM temp_rowcounts d,
+				  (SELECT @rownum:=0) r
+					  WHERE 1
+					  -- put some where clause here
+					  ORDER BY d.rowcount
+				) as t1, 
+				(
+				SELECT count(*) as total_rows
+				  FROM temp_rowcounts2 d
+				WHERE 1
+				-- put same where clause here
+				) as t2
+		WHERE 1
+			AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) );
+
+
+	drop temporary table temp_rowcounts;
+	drop temporary table temp_rowcounts2;
+
+	set @stmt = 'insert into GroupByStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName,
+						RowCount, MeanCount, MedianCount, ModeCount, StddevCount, VarianceCount,
+						MinimumCount, MaximumCount)
+					select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%",
+						%sum_count%, %mean_count%, %median_count%, %mode_count%, %stddev_count%, %variance_count%,
+						%minimum_count%, %maximum_count%;';
+
+	if @stmt <> '' then
+      set @stmt = replace(@stmt, '%c_name%', _column_name);
+      set @stmt = replace(@stmt, '%t_name%', _table_name);
+      set @stmt = replace(@stmt, '%t_schema%', _database_name);
+      set @stmt = replace(@stmt, '%database_statistics_run_id%', _DatabaseStatisticsRunId);
+      set @stmt = replace(@stmt, '%sum_count%', sum_count);
+      set @stmt = replace(@stmt, '%mean_count%', mean_count);
+      set @stmt = replace(@stmt, '%median_count%', median_count);
+      set @stmt = replace(@stmt, '%mode_count%', mode_count);
+      set @stmt = replace(@stmt, '%stddev_count%', stddev_count);
+      set @stmt = replace(@stmt, '%variance_count%', variance_count);
+      set @stmt = replace(@stmt, '%minimum_count%', minimum_count);
+      set @stmt = replace(@stmt, '%maximum_count%', maximum_count);
+      prepare stmt from @stmt;
+      execute stmt;
+      deallocate prepare stmt;
+   end if;
+		
+	
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `CalculatePersonAttributeStatistics` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -34,7 +317,7 @@ USE `UMETRICSSupport`;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE PROCEDURE `CalculatePersonAttributeStatistics`()
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculatePersonAttributeStatistics`()
     MODIFIES SQL DATA
     SQL SECURITY INVOKER
     COMMENT 'Stored procedure to calculate statistics for the PersonAttribute table.  These statistics are used for disambiguation.'
@@ -114,9 +397,9 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE PROCEDURE `CollapsePersons`(IN `person_a_id` int unsigned, IN `person_b_id` int unsigned, notes varchar(500))
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CollapsePersons`(IN `person_a_id` int unsigned, IN `person_b_id` int unsigned, IN `notes` varchar(500))
     MODIFIES SQL DATA
     SQL SECURITY INVOKER
     COMMENT 'Collapses two People records and all of their supporting baggage.'
@@ -698,6 +981,26 @@ begin
 
 
 end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `InsertDatabaseStatisticsRun` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `InsertDatabaseStatisticsRun`(IN `_database_name` VARCHAR(100), IN `_description` VARCHAR(250), OUT `_DatabaseStatisticsRunId` INT)
+BEGIN
+	insert into DatabaseStatisticsRun (AsOf, DatabaseName, Description) values (now(), _database_name, _description);
+	set _DatabaseStatisticsRunId = last_insert_id();
+END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;

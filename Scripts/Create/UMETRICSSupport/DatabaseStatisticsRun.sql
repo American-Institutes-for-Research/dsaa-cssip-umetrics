@@ -14,20 +14,19 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `CollapsePersonsLog`
+-- Table structure for table `DatabaseStatisticsRun`
 --
 
-DROP TABLE IF EXISTS `CollapsePersonsLog`;
+DROP TABLE IF EXISTS `DatabaseStatisticsRun`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CollapsePersonsLog` (
-  `CollapsePersonsLogId` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique identifier of a CollapsePersonsLog row.',
-  `CollapsedPersonId` int(10) unsigned NOT NULL COMMENT 'The PersonId of the person who was removed.',
-  `TargetPersonId` int(10) unsigned NOT NULL COMMENT 'The PersonId that the CollapsedPersonId was collapsed into.',
-  `CollapseDateTime` datetime NOT NULL COMMENT 'The timestamp of the collapse.',
-  `Notes` varchar(500) NOT NULL COMMENT 'Just a minor blurb that might explain why the collapse occurred.',
-  PRIMARY KEY (`CollapsePersonsLogId`)
-) ENGINE=InnoDB AUTO_INCREMENT=370 DEFAULT CHARSET=utf8 COMMENT='This is used to simply log when Persons were collapsed.';
+CREATE TABLE `DatabaseStatisticsRun` (
+  `DatabaseStatisticsRunId` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique identifier for this table',
+  `AsOf` datetime DEFAULT NULL COMMENT 'The date-time when this run was started',
+  `DatabaseName` varchar(100) DEFAULT NULL COMMENT 'The name of the database for this run',
+  `Description` varchar(250) DEFAULT NULL COMMENT 'A user-supplied description for this run',
+  PRIMARY KEY (`DatabaseStatisticsRunId`)
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8 COMMENT='Use this for relating all database statistics in BasicColumnStatistics, EnumeratedStatistics, and GroupByStatistics into one group so they can be compared over time.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

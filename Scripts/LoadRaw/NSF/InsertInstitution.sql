@@ -17,7 +17,9 @@ insert into Institution
     StreetAddress,
     CountryName,
     StateName,
-    StateCode
+    StateCode,
+    EmailAddress,
+    CountryFlag
 ) values (
     %(AwardID)s,
     %(Name)s,
@@ -27,5 +29,7 @@ insert into Institution
     %(StreetAddress)s,
     %(CountryName)s,
     %(StateName)s,
-    %(StateCode)s
+    %(StateCode)s,
+    %(EmailAddress)s,
+    %(CountryFlag)s
 )
