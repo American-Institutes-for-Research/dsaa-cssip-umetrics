@@ -1,4 +1,4 @@
-###############################################################################
+##############################################################################
 # Copyright (c) 2013, AMERICAN INSTITUTES FOR RESEARCH
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,8 +19,10 @@ NameComponents = namedtuple("NameComponents", "Prefix GivenName OtherName Family
 
 # The parsers ignore case and periods that appear in prefixes and suffixes.
 _Suffixes = ["JR", "SR", "II", "2ND", "III", "3RD", "IV", "4TH", "V", "VI", "PHD", "MD", "RN", "DR", "JD", "MED",
-            "MPH", "PHMD", "DRPH", "FAAN", "MD PHD", "MP"]
+             "MPH", "PHMD", "DRPH", "FAAN", "MD PHD", "MP"]
 _Prefixes = ["DR", "MR", "MRS", "MS", "PROF"]
+_FamilyNamePrefixes = ["DE", "VON", "VAN", "DER", "LA", "EL", "DI", "DEL", "ST", "SAINT", "MC", "MAC", "VONDER", "DA",
+                       "LE", "DEN", "VANDE", "VANDEN", "DU"]
 
 
 def parse_name(name_format, name_string):
@@ -86,34 +88,40 @@ def _parse_name_for_citeseerx(name_string):
         if _string_contains_only_suffixes(comma_separated[1]):
             suffix = comma_separated[1].strip()
             name_string = comma_separated[0]
-    space_separated = name_string.split(" ", 1)
+    words = name_string.split(" ", 1)
     # Check to see if the first string is a prefix
-    if _string_contains_only_prefixes(space_separated[0]):
-        prefix = space_separated[0]
-        space_separated = space_separated[1].strip().split(" ", 1)  # Strip off the prefix and continue on
+    if _string_contains_only_prefixes(words[0]):
+        prefix = words[0]
+        words = words[1].strip().split(" ", 1)  # Strip off the prefix and continue on
     # If there is only one word, then don't return any results
-    if len(space_separated) == 1:
+    if len(words) == 1:
         prefix = None
     else:
-        given_name = space_separated[0]
-        space_separated = space_separated[1].strip().rsplit(" ", 1)
-        if len(space_separated) == 1:
-            family_name = space_separated[0]
+        given_name = words[0]
+        words = words[1].strip().rsplit(" ", 1)
+        if len(words) == 1:
+            family_name = words[0]
         else:
-            if _string_contains_only_suffixes(space_separated[1]):
-                suffix = space_separated[1]
-                space_separated = space_separated[0].strip().rsplit(" ", 1)
-            if len(space_separated) == 1:
-                family_name = space_separated[0]
+            if _string_contains_only_suffixes(words[1]):
+                suffix = words[1]
+                words = words[0].strip().rsplit(" ", 1)
+            elif len(words[1]) == 1:
+                # If the last piece is only one character, ignore it
+                words = words[0].strip().rsplit(" ", 1)
+                if (len(words) > 1) and _string_contains_only_suffixes(words[1]):
+                    suffix = words[1]
+                    words = words[0].strip().rsplit(" ", 1)
+            if len(words) == 1:
+                family_name = words[0]
             else:
                 # If the last piece is only one character, ignore it
-                if len(space_separated[1]) == 1:
-                    space_separated = space_separated[0].strip().rsplit(" ", 1)
-                if len(space_separated) == 1:
-                    family_name = space_separated[0]
+                if len(words[1]) == 1:
+                    words = words[0].strip().rsplit(" ", 1)
+                if len(words) == 1:
+                    family_name = words[0]
                 else:
-                    other_name = space_separated[0]
-                    family_name = space_separated[1]
+                    other_name = words[0]
+                    family_name = words[1]
 
     if prefix is not None:
         prefix = prefix.strip().strip(",")
@@ -126,8 +134,11 @@ def _parse_name_for_citeseerx(name_string):
     if suffix is not None:
         suffix = suffix.strip().strip(",")
 
-    return NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
-                          FamilyName=family_name, Suffix=suffix, NickName=nick_name)
+    name_components = NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
+                                     FamilyName=family_name, Suffix=suffix, NickName=nick_name)
+    name_components = _parse_family_name_prefixes(name_components)
+
+    return name_components
 
 
 def _parse_name_for_exporter(name_string):
@@ -178,10 +189,10 @@ def _parse_name_for_exporter(name_string):
         suffix = comma_separated[1].rsplit(",", 1)[0]  # everything between the first and last comma
         family_name = comma_separated[0]  # everything before the first comma
         remainder = comma_separated[1].rsplit(",", 1)[1].strip()  # everything after the last comma
-        space_separated = remainder.split(" ", 1)
-        given_name = space_separated[0].strip(",")  # up to the first blank in remainder
-        if len(space_separated) > 1:  # if there is a blank...
-            other_name = space_separated[1]  # everything after the first blank in remainder
+        words = remainder.split(" ", 1)
+        given_name = words[0].strip(",")  # up to the first blank in remainder
+        if len(words) > 1:  # if there is a blank...
+            other_name = words[1]  # everything after the first blank in remainder
     else:
         comma_separated = name_string.split(",", 2)  # Only break into at most 3 parts by the first two commas
         # If there aren't any commas then this is the wrong function to call
@@ -204,10 +215,10 @@ def _parse_name_for_exporter(name_string):
                     family_name = comma_separated[0]
                     suffix = comma_separated[1]
                     remainder = comma_separated[2].strip()
-            space_separated = remainder.split(" ", 1)
-            given_name = space_separated[0].strip(",")
-            if len(space_separated) > 1:
-                other_name = space_separated[1]
+            words = remainder.split(" ", 1)
+            given_name = words[0].strip(",")
+            if len(words) > 1:
+                other_name = words[1]
     if family_name is not None:
         family_name = family_name.strip()
     if given_name is not None:
@@ -216,8 +227,12 @@ def _parse_name_for_exporter(name_string):
         other_name = other_name.strip()
     if suffix is not None:
         suffix = suffix.strip()
-    return NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
-                          FamilyName=family_name, Suffix=suffix, NickName=nick_name)
+
+    name_components = NameComponents(Prefix=prefix, GivenName=given_name, OtherName=other_name,
+                                     FamilyName=family_name, Suffix=suffix, NickName=nick_name)
+    name_components = _parse_family_name_prefixes(name_components)
+
+    return name_components
 
 
 def _parse_family_name(name_string):
@@ -225,17 +240,38 @@ def _parse_family_name(name_string):
     family_name = name_string
     suffix = None
     #rsplit is important here. If there are multiple blanks, everything before the last one is considered familyname
-    separated = name_string.rsplit(" ", 1)
-    if len(separated) > 1:
-        if any(x == separated[1].upper().strip() for x in _Suffixes):
-            family_name = separated[0]
-            suffix = separated[1]
+    words = name_string.rsplit(" ", 1)
+    if len(words) > 1:
+        if any(x == words[1].upper().strip() for x in _Suffixes):
+            family_name = words[0]
+            suffix = words[1]
     if family_name is not None:
         family_name = family_name.strip()
     if suffix is not None:
         suffix = suffix.strip()
     return NameComponents(Prefix=None, GivenName=None, OtherName=None,
                           FamilyName=family_name, Suffix=suffix, NickName=None)
+
+
+def _parse_family_name_prefixes(name_components):
+    """Checks the OtherName for family name prefixes and moves to the front of the family name."""
+    other_name = name_components.OtherName
+    family_name = name_components.FamilyName
+    if other_name is not None:
+        words = other_name.split(" ")
+        for word in reversed(words):
+            if any(x == word.upper().strip() for x in _FamilyNamePrefixes):
+                other_name = other_name.replace(word, "")
+                family_name = word + " " + family_name
+            else:
+                break
+        other_name = other_name.strip()
+
+    if other_name == "":
+        other_name = None
+
+    return NameComponents(Prefix=name_components.Prefix, GivenName=name_components.GivenName, OtherName=other_name,
+                          FamilyName=family_name, Suffix=name_components.Suffix, NickName=name_components.NickName)
 
 
 def _string_contains_only_suffixes(suffix_string):
@@ -392,3 +428,21 @@ if __name__ == "__main__":
     print("QQ\t", parse_name(NameFormat.CITESEERX, "GivenName M. FamilyName, III PhD M.D.")
               == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="M.",
                                 Suffix="III PhD M.D.", NickName=None))
+    print("RR\t", parse_name(NameFormat.CITESEERX, "GivenName M. von FamilyName, III")
+              == NameComponents(Prefix=None, FamilyName="von FamilyName", GivenName="GivenName", OtherName="M.",
+                                Suffix="III", NickName=None))
+    print("SS\t", parse_name(NameFormat.CITESEERX, "GivenName M. van der FamilyName, III")
+          == NameComponents(Prefix=None, FamilyName="van der FamilyName", GivenName="GivenName", OtherName="M.",
+                            Suffix="III", NickName=None))
+    print("TT\t", parse_name(NameFormat.CITESEERX, "GivenName Ivan von FamilyName, III")
+          == NameComponents(Prefix=None, FamilyName="von FamilyName", GivenName="GivenName", OtherName="Ivan",
+                            Suffix="III", NickName=None))
+    print("UU\t", parse_name(NameFormat.CITESEERX, "GivenName Ivan de la FamilyName, III")
+          == NameComponents(Prefix=None, FamilyName="de la FamilyName", GivenName="GivenName", OtherName="Ivan",
+                            Suffix="III", NickName=None))
+    print("VV\t", parse_name(NameFormat.CITESEERX, "GivenName FamilyName Jr C")
+          == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName=None,
+                            Suffix="Jr", NickName=None))
+    print("WW\t", parse_name(NameFormat.CITESEERX, "GivenName de OtherName FamilyName Jr")
+          == NameComponents(Prefix=None, FamilyName="FamilyName", GivenName="GivenName", OtherName="de OtherName",
+                            Suffix="Jr", NickName=None))

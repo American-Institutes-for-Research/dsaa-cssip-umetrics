@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -32,8 +32,10 @@ CREATE TABLE `EnumeratedStatistics` (
   `ValueChar` varchar(250) DEFAULT NULL COMMENT 'The enumerated value when DataType is a character type',
   `ValueDate` date DEFAULT NULL COMMENT 'The enumerated value when DataType is a date type',
   PRIMARY KEY (`EnumeratedStatisticsId`),
-  KEY `DatabaseName_TableName_ColumnName` (`DatabaseName`,`TableName`,`ColumnName`)
-) ENGINE=InnoDB AUTO_INCREMENT=1367 DEFAULT CHARSET=utf8;
+  KEY `DatabaseName_TableName_ColumnName` (`DatabaseName`,`TableName`,`ColumnName`),
+  KEY `FK_EnumeratedStatistics_DatabaseStatisticsRun` (`DatabaseStatisticsRunId`),
+  CONSTRAINT `FK_EnumeratedStatistics_DatabaseStatisticsRun` FOREIGN KEY (`DatabaseStatisticsRunId`) REFERENCES `DatabaseStatisticsRun` (`DatabaseStatisticsRunId`)
+) ENGINE=InnoDB AUTO_INCREMENT=7197 DEFAULT CHARSET=utf8 COMMENT='Statistics for the enumerated values for a column in any database. One row per column per table per database per "database statistics run". Generated using the CalcluateEnumeratedStatistics stored procedure.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

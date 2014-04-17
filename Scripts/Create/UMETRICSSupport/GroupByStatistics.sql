@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -36,8 +36,9 @@ CREATE TABLE `GroupByStatistics` (
   `MaximumCount` int(10) unsigned DEFAULT NULL COMMENT 'The maximum of the number of rows per unique ColumnName value',
   PRIMARY KEY (`GroupByStatisticsId`),
   KEY `DatabaseName_TableName_ColumnName` (`DatabaseName`,`TableName`,`ColumnName`),
-  KEY `DatabaseStatisticsRunId` (`DatabaseStatisticsRunId`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+  KEY `DatabaseStatisticsRunId` (`DatabaseStatisticsRunId`),
+  CONSTRAINT `FK_GroupByStatistics_DatabaseStatisticsRun` FOREIGN KEY (`DatabaseStatisticsRunId`) REFERENCES `DatabaseStatisticsRun` (`DatabaseStatisticsRunId`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COMMENT='Statistics for the row counts of a table when "grouped by" the ColumnName column. One row per column per table per database per "database statistics run". Generated using the CalcluateGroupByStatistics stored procedure.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

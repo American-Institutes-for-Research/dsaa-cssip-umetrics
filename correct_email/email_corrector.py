@@ -8,8 +8,9 @@
 ###############################################################################
 import string
 from email.utils import parseaddr
+import os
 import sys
-sys.path.append("..\\ThirdParty\\py_email_validation-1.0.0.3")
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"..\\ThirdParty\\py_email_validation-1.0.0.3"))
 import email_validation
 
 _ValidEmailCharacters = string.ascii_letters+string.digits+" .@(),:;<>[]\\!#$%&'*+-/=?^_`{|}~"
@@ -58,6 +59,7 @@ def email_corrector(email):
 
 if __name__ == "__main__":
     # Test cases
+
     print("A\t", email_corrector("valid@email.com") == "valid@email.com")
     print("B\t", email_corrector("invalid at email.com") is None)
     print("C\t", email_corrector("valid @email.com") == "valid@email.com")

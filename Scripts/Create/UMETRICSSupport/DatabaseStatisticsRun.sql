@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -26,7 +26,7 @@ CREATE TABLE `DatabaseStatisticsRun` (
   `DatabaseName` varchar(100) DEFAULT NULL COMMENT 'The name of the database for this run',
   `Description` varchar(250) DEFAULT NULL COMMENT 'A user-supplied description for this run',
   PRIMARY KEY (`DatabaseStatisticsRunId`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8 COMMENT='Use this for relating all database statistics in BasicColumnStatistics, EnumeratedStatistics, and GroupByStatistics into one group so they can be compared over time.';
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8 COMMENT='Use this for relating all database statistics in BasicColumnStatistics, EnumeratedStatistics, and GroupByStatistics into one group so they can be compared over time.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

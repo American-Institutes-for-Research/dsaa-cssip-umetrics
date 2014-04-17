@@ -9,7 +9,6 @@
 
 import datetime
 import mysql.connector
-import EmailCorrector
 
 
 def correct_email(username, password, host, database):

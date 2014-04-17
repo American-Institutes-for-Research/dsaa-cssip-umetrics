@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -37,6 +37,17 @@ DELIMITER ;;
 CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateBasicColumnStatistics`(IN `_DatabaseStatisticsRunId` INT, IN `_database_name` VARCHAR(64), IN `_keyed_columns_only` BIT)
     COMMENT 'Stored procedure to calculate the basic statistics for all columns for all tables in a specified database and add them to the BasicColumnStatistics table.'
 BEGIN
+
+
+	################################################################################
+	# Copyright (c) 2014, AMERICAN INSTITUTES FOR RESEARCH
+	# All rights reserved.
+	# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+	# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	################################################################################
+
 	DECLARE done INT DEFAULT FALSE;
 	declare t_schema, t_name, c_name, d_type varchar(64);
 	# We'll use this cursor when _keyed_column_only is false - i.e. when we want to do this for all columns in the table
@@ -140,6 +151,17 @@ CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateEnumeratedStatistics`(IN `_D
     COMMENT 'Stored procedure to calculate the row counts for each unique value in a specified column in a specific table in a specified database and add them to the EnumeratedStatistics table.'
 BEGIN
 
+
+	################################################################################
+	# Copyright (c) 2014, AMERICAN INSTITUTES FOR RESEARCH
+	# All rights reserved.
+	# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+	# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	################################################################################
+
+
 	declare d_type varchar(64);
 	
 	select data_type into d_type from information_schema.columns where table_schema=_database_name and table_name=_table_name and column_name=_column_name;
@@ -150,7 +172,7 @@ BEGIN
 				(d_type = 'TEXT') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueChar)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		when (d_type = 'INT') or
@@ -163,7 +185,7 @@ BEGIN
 				(d_type = 'FLOAT') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType, 
 								ValueRowCount, ValueNumeric)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		when (d_type = 'DATE') or
@@ -172,13 +194,13 @@ BEGIN
 				(d_type = 'YEAR') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueDate)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		else
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueChar)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", count(*), %c_name%, %d_type%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 	end case;
@@ -214,6 +236,16 @@ DELIMITER ;;
 CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `CalculateGroupByStatistics`(IN `_DatabaseStatisticsRunId` INT, IN `_database_name` VARCHAR(64), IN `_table_name` VARCHAR(64), IN `_column_name` VARCHAR(64))
     COMMENT 'Stored procedure to calculate the statistics of the row counts for a specified table in a specified database when the rows are grouped by a specified column, and add them to the GroupByStatistics table.'
 BEGIN
+
+	################################################################################
+	# Copyright (c) 2014, AMERICAN INSTITUTES FOR RESEARCH
+	# All rights reserved.
+	# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+	# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	################################################################################
+
 
 	declare sum_count, median_count, mode_count, minimum_count, maximum_count int;
 	declare mean_count, stddev_count, variance_count float;
@@ -998,6 +1030,16 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`mysqladmin`@`%` PROCEDURE `InsertDatabaseStatisticsRun`(IN `_database_name` VARCHAR(100), IN `_description` VARCHAR(250), OUT `_DatabaseStatisticsRunId` INT)
 BEGIN
+
+	################################################################################
+	# Copyright (c) 2014, AMERICAN INSTITUTES FOR RESEARCH
+	# All rights reserved.
+	# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+	# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	################################################################################
+
 	insert into DatabaseStatisticsRun (AsOf, DatabaseName, Description) values (now(), _database_name, _description);
 	set _DatabaseStatisticsRunId = last_insert_id();
 END ;;

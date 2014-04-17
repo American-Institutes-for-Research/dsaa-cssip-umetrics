@@ -3,3 +3,6 @@ __pycache__/
 *.iml
 vcs.xml
 workspace.xml
+*.iml
+vcs.xml
+workspace.xml

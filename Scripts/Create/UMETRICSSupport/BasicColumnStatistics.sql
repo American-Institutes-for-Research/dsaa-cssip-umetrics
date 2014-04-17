@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
 -- Server version	5.6.13-log
 
@@ -46,7 +46,7 @@ CREATE TABLE `BasicColumnStatistics` (
   KEY `DatabaseName_TableName_ColumnName` (`DatabaseName`,`TableName`,`ColumnName`),
   KEY `DatabaseStatisticsRunId` (`DatabaseStatisticsRunId`),
   CONSTRAINT `FK_BasicColumnStatistics_DatabaseStatisticsRun` FOREIGN KEY (`DatabaseStatisticsRunId`) REFERENCES `DatabaseStatisticsRun` (`DatabaseStatisticsRunId`)
-) ENGINE=InnoDB AUTO_INCREMENT=95 DEFAULT CHARSET=utf8 COMMENT='Basic statistics for column values in any database. One row per column per table per database per "database statistics run".';
+) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8 COMMENT='Basic statistics for column values in any database. One row per column per table per database per "database statistics run".';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
