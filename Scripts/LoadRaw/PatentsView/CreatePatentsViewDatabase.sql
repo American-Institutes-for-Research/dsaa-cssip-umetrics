@@ -284,7 +284,6 @@
 	from
 		`uspto`.`assignee`
 	where
-		(nullif(`type`, '') is not null and `type` regexp '^[|0-9]+$') or
 		nullif(`name_first`, '') is not null or
 		nullif(`name_last`, '') is not null or
 		nullif(`organization`, '') is not null;
@@ -326,13 +325,9 @@
 	where
 		nullif(`patent_id`, '') is not null and
 		(
-			nullif(`citation_id`, '') is not null or
 			nullif(`date`, date('0000-00-00')) is not null or
-			nullif(`name`, '') is not null or
-			nullif(`kind`, '') is not null or
 			nullif(`number`, '') is not null or
-			nullif(`country`, '') is not null or
-			nullif(`category`, '') is not null
+			nullif(`country`, '') is not null
 		);
 
 
@@ -379,11 +374,8 @@
 		nullif(`patent_id`, '') is not null and
 		(
 			nullif(`date`, date('0000-00-00')) is not null or
-			nullif(`name`, '') is not null or
-			nullif(`kind`, '') is not null or
 			nullif(`number`, '') is not null or
-			nullif(`country`, '') is not null or
-			nullif(`category`, '') is not null
+			nullif(`country`, '') is not null
 		);
 
 
@@ -418,8 +410,7 @@
 		`uspto`.`inventor`
 	where
 		nullif(`name_first`, '') is not null or
-		nullif(`name_last`, '') is not null or
-		nullif(`nationality`, '') is not null;
+		nullif(`name_last`, '') is not null;
 
 
 
@@ -492,8 +483,6 @@
 		`num_claims` is not null or
 		nullif(`number`, '') is not null or
 		nullif(`date`, date('0000-00-00')) is not null or
-		nullif(`type`, '') is not null or
-		nullif(`kind`, '') is not null or
 		nullif(`title`, '') is not null;
 
 
@@ -516,8 +505,8 @@
 	create table `PatentsView`.`assignee`
 	(
 		`assignee_id` int unsigned not null,
-		`first_last_org` varchar(256) null,
-		`name_source` enum('INDIVIDUAL','ORGANIZATION') null default null,
+		`first_last_org` varchar(256) not null,
+		`name_source` enum('INDIVIDUAL','ORGANIZATION') not null,
 		primary key (`assignee_id`),
 		index `ix_assignee_first_last_org` (`first_last_org`),
 		index `ix_assignee_name_source` (`name_source`)
@@ -1160,8 +1149,8 @@
 	(
 		`assignee_id` int unsigned not null,
 		`patent_id` int unsigned not null,
-		`location_id` int unsigned not null,
-		primary key (`assignee_id`, `patent_id`, `location_id`),
+		`location_id` int unsigned null,
+		unique index `ak0_rawassignee` (`assignee_id`, `patent_id`, `location_id`),
 		unique index `ak1_rawassignee` (`patent_id`, `assignee_id`, `location_id`),
 		unique index `ak2_rawassignee` (`location_id`, `assignee_id`, `patent_id`)
 	)
@@ -1192,10 +1181,10 @@
 		inner join `PatentsView`.`temp_id_mapping_patent` tp on
 		tp.`old_patent_id` = ra.`patent_id`
 
-		inner join `uspto`.`rawlocation` rl on
+		left outer join `uspto`.`rawlocation` rl on
 		rl.`id` = ra.`rawlocation_id`
 
-		inner join `PatentsView`.`temp_id_mapping_location` tl on
+		left outer join `PatentsView`.`temp_id_mapping_location` tl on
 		tl.`old_location_id` = rl.`location_id`;
 
 
@@ -1213,8 +1202,8 @@
 	(
 		`inventor_id` int unsigned not null,
 		`patent_id` int unsigned not null,
-		`location_id` int unsigned not null,
-		primary key (`inventor_id`, `patent_id`, `location_id`),
+		`location_id` int unsigned null,
+		unique index `ak0_rawinventor` (`inventor_id`, `patent_id`, `location_id`),
 		unique index `ak1_rawinventor` (`patent_id`, `inventor_id`, `location_id`),
 		unique index `ak2_rawinventor` (`location_id`, `inventor_id`, `patent_id`)
 	)
@@ -1245,9 +1234,9 @@
 		inner join `PatentsView`.`temp_id_mapping_patent` tp on
 		tp.`old_patent_id` = ri.`patent_id`
 
-		inner join `uspto`.`rawlocation` rl on
+		left outer join `uspto`.`rawlocation` rl on
 		rl.`id` = ri.`rawlocation_id`
 
-		inner join `PatentsView`.`temp_id_mapping_location` tl on
+		left outer join `PatentsView`.`temp_id_mapping_location` tl on
 		tl.`old_location_id` = rl.`location_id`;
 
