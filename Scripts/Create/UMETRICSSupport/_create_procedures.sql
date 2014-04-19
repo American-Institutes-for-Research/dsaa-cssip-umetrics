@@ -79,11 +79,14 @@ BEGIN
 			when (d_type = 'VARCHAR') or
 					(d_type = 'CHAR') or
 					(d_type = 'TEXT') then
+				# You'll see lots of double-quotes around replacement variables. That's because some folks think it is ok
+				# to have column names that are keywords, so they need the quotes in order to pass SQL syntax checking and
+				# function as expected.
 				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 									RowCount, NotNullCount, DistinctCount, MinimumValueChar, MaximumValueChar, MinimumLength, MaximumLength, AverageLength) 
-								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
-									count(distinct %c_name%), min(%c_name%), max(%c_name%), min(length(%c_name%)), max(length(%c_name%)),
-									avg(length(%c_name%))
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%t_name%.%c_name%),
+									count(distinct %t_name%.%c_name%), min(%t_name%.%c_name%), max(%t_name%.%c_name%), min(length(%t_name%.%c_name%)), max(length(%t_name%.%c_name%)),
+									avg(length(%t_name%.%c_name%))
 									from %t_schema%.%t_name%;';
 			when (d_type = 'INT') or
 					(d_type = 'BIGINT') or
@@ -95,8 +98,8 @@ BEGIN
 					(d_type = 'FLOAT') then
 				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 									RowCount, NotNullCount, DistinctCount, MinimumValueNumeric, MaximumValueNumeric, AverageValueNumeric) 
-								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
-									count(distinct %c_name%), min(%c_name%), max(%c_name%), avg(%c_name%)
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%t_name%.%c_name%),
+									count(distinct %t_name%.%c_name%), min(%t_name%.%c_name%), max(%t_name%.%c_name%), avg(%t_name%.%c_name%)
 									from %t_schema%.%t_name%;';
 			when (d_type = 'DATE') or
 					(d_type = 'TIME') or
@@ -104,13 +107,12 @@ BEGIN
 					(d_type = 'YEAR') then
 				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 									RowCount, NotNullCount, DistinctCount, MinimumValueDate, MaximumValueDate, AverageValueDate) 
-								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%c_name%),
-									count(distinct %c_name%), min(%c_name%), max(%c_name%), from_unixtime(avg(unix_timestamp(%c_name%)))
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%t_name%.%c_name%),
+									count(distinct %t_name%.%c_name%), min(%t_name%.%c_name%), max(%t_name%.%c_name%), from_unixtime(avg(unix_timestamp(%t_name%.%c_name%)))
 									from %t_schema%.%t_name%;';
 			else
 				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 									RowCount, NotNullCount, DistinctCount)
-								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(''%c_name%''), count(distinct ''%c_name%'')
 									from %t_schema%.%t_name%;';
 		end case;
 		if @stmt <> '' then
@@ -172,7 +174,7 @@ BEGIN
 				(d_type = 'TEXT') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueChar)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %t_name%.%c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		when (d_type = 'INT') or
@@ -185,7 +187,7 @@ BEGIN
 				(d_type = 'FLOAT') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType, 
 								ValueRowCount, ValueNumeric)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %t_name%.%c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		when (d_type = 'DATE') or
@@ -194,13 +196,13 @@ BEGIN
 				(d_type = 'YEAR') then
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueDate)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %t_name%.%c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 		else
 			set @stmt = 'insert into EnumeratedStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 								ValueRowCount, ValueChar)
-							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %c_name%
+							select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), %t_name%.%c_name%
 									from %t_schema%.%t_name%
 									group by %t_schema%.%t_name%.%c_name%;';
 	end case;
@@ -253,7 +255,7 @@ BEGIN
 	set @stmt = 'create temporary table temp_rowcounts
 						select count(*) as rowcount
 						from %t_schema%.%t_name%
-						group by %c_name%;';
+						group by %t_name%.%c_name%;';
    set @stmt = replace(@stmt, '%c_name%', _column_name);
    set @stmt = replace(@stmt, '%t_name%', _table_name);
    set @stmt = replace(@stmt, '%t_schema%', _database_name);
@@ -264,7 +266,7 @@ BEGIN
 	set @stmt = 'create temporary table temp_rowcounts2
 						select count(*) as rowcount
 						from %t_schema%.%t_name%
-						group by %c_name%;';
+						group by %t_name%.%c_name%;';
    set @stmt = replace(@stmt, '%c_name%', _column_name);
    set @stmt = replace(@stmt, '%t_name%', _table_name);
    set @stmt = replace(@stmt, '%t_schema%', _database_name);
