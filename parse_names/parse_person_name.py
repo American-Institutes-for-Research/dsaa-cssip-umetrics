@@ -21,10 +21,10 @@ def from_exporter(username, password, host, database, table):
 
     # Connect to the database.
     read_cnx = mysql.connector.connect(user=username, password=password, database=database,
-                                  host=host)
+                                       host=host)
     read_cursor = read_cnx.cursor()
     write_cnx = mysql.connector.connect(user=username, password=password, database=database,
-                                  host=host)
+                                        host=host)
     write_cursor = write_cnx.cursor()
 
     query_string = "select PersonNameId, FullName from {0} pn inner join PersonAttribute pa "\
@@ -38,15 +38,15 @@ def from_exporter(username, password, host, database, table):
     for (PersonNameId, FullName) in read_cursor:
         name_components = name_parser.parse_name(name_parser.NameFormat.EXPORTER, FullName)
         if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
-            or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
-            or (name_components.Suffix is not None) or (name_components.NickName is not None):
-            query_string = "UPDATE {0} SET Prefix=%s, GivenName=%s, OtherName=%s, FamilyName=%s, Suffix=%s"\
-                " WHERE PersonNameId=%s".format(table)
+                or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
+                or (name_components.Suffix is not None) or (name_components.NickName is not None):
+            query_string = "UPDATE {0} SET Prefix=%s, GivenName=%s, OtherName=%s, FamilyName=%s, Suffix=%s" \
+                           " WHERE PersonNameId=%s".format(table)
             write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
                                                 name_components.OtherName, name_components.FamilyName,
                                                 name_components.Suffix, PersonNameId))
         num_rows_read += 1
-        if divmod(num_rows_read,10000)[1] == 0:
+        if divmod(num_rows_read, 10000)[1] == 0:
             print(datetime.datetime.now(), num_rows_read)
             write_cnx.commit()
 
@@ -68,10 +68,10 @@ def from_citeseerx(username, password, host, database, table):
 
     # Connect to the database.
     read_cnx = mysql.connector.connect(user=username, password=password, database=database,
-                                  host=host)
+                                       host=host)
     read_cursor = read_cnx.cursor()
     write_cnx = mysql.connector.connect(user=username, password=password, database=database,
-                                  host=host)
+                                        host=host)
     write_cursor = write_cnx.cursor()
 
     query_string = "select PersonNameId, FullName from {0} pn inner join PersonAttribute pa"\
@@ -93,7 +93,7 @@ def from_citeseerx(username, password, host, database, table):
                                                 name_components.OtherName, name_components.FamilyName,
                                                 name_components.Suffix, PersonNameId))
         num_rows_read += 1
-        if divmod(num_rows_read,10000)[1] == 0:
+        if divmod(num_rows_read, 10000)[1] == 0:
             print(datetime.datetime.now(), num_rows_read)
             write_cnx.commit()
 
@@ -104,6 +104,7 @@ def from_citeseerx(username, password, host, database, table):
     read_cursor.close()
     read_cnx.close()
     return
+
 
 def other_with_comma(username, password, host, database, table):
     """

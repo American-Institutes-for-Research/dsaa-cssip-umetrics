@@ -1,8 +1,8 @@
 -- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
 --
--- Host: localhost    Database: UMETRICSSupport
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: UMETRICSSupport
 -- ------------------------------------------------------
--- Server version	5.6.15
+-- Server version	5.6.13-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,7 +27,7 @@ CREATE TABLE `CollapsePersonsLog` (
   `CollapseDateTime` datetime NOT NULL COMMENT 'The timestamp of the collapse.',
   `Notes` varchar(500) NOT NULL COMMENT 'Just a minor blurb that might explain why the collapse occurred.',
   PRIMARY KEY (`CollapsePersonsLogId`)
-) ENGINE=InnoDB AUTO_INCREMENT=228 DEFAULT CHARSET=utf8 COMMENT='This is used to simply log when Persons were collapsed.';
+) ENGINE=InnoDB AUTO_INCREMENT=370 DEFAULT CHARSET=utf8 COMMENT='This is used to simply log when Persons were collapsed.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

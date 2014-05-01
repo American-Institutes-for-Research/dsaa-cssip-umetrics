@@ -1,5 +1,5 @@
 -- --------------------------------------------------------
--- Host:                         mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com
+-- Host:                         
 -- Server version:               5.6.13-log - MySQL Community Server (GPL)
 -- Server OS:                    Linux
 -- HeidiSQL Version:             8.1.0.4545
@@ -17,38 +17,56 @@ USE `NSF`;
 
 -- Dumping structure for table NSF.Award
 CREATE TABLE IF NOT EXISTS `Award` (
-  `AwardID` int(11) NOT NULL,
+  `AwardPKId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `AwardTitle` varchar(200) DEFAULT NULL,
   `AwardEffectiveDate` date DEFAULT NULL,
   `AwardExpirationDate` date DEFAULT NULL,
   `AwardAmount` decimal(13,2) DEFAULT NULL,
   `AwardInstrument` varchar(50) DEFAULT NULL,
+  `AwardInstrumentCode` varchar(50) DEFAULT NULL,
   `OrganizationCode` int(11) DEFAULT NULL,
   `Directorate` varchar(100) DEFAULT NULL,
+  `DirectorateAbbreviation` varchar(50) DEFAULT NULL,
+  `DirectorateCode` varchar(50) DEFAULT NULL,
   `Division` varchar(100) DEFAULT NULL,
+  `DivisionAbbreviation` varchar(50) DEFAULT NULL,
+  `DivisionCode` varchar(50) DEFAULT NULL,
   `ProgramOfficer` varchar(50) DEFAULT NULL,
   `AbstractNarration` text,
   `MinAmdLetterDate` date DEFAULT NULL,
   `MaxAmdLetterDate` date DEFAULT NULL,
-  `ARRAAmount` decimal(13,2) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `ARRAAmount` decimal(13,2) DEFAULT NULL,
+  `IsHistoricalAward` varchar(10) DEFAULT NULL,
+  `UM_ProgramOfficer_Prefix` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficer_GivenName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficer_OtherName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficer_FamilyName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficer_Suffix` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`AwardPKId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
 
 -- Dumping structure for table NSF.FOAInformation
 CREATE TABLE IF NOT EXISTS `FOAInformation` (
-  `AwardID` int(11) NOT NULL,
+  `FOAInformationId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `Code` int(11) DEFAULT NULL,
-  `Name` varchar(50) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `Name` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`FOAInformationId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
 
 -- Dumping structure for table NSF.Institution
 CREATE TABLE IF NOT EXISTS `Institution` (
-  `AwardID` int(11) NOT NULL,
+  `InstitutionId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `Name` varchar(100) DEFAULT NULL,
   `CityName` varchar(50) DEFAULT NULL,
   `ZipCode` varchar(10) DEFAULT NULL,
@@ -56,42 +74,61 @@ CREATE TABLE IF NOT EXISTS `Institution` (
   `StreetAddress` varchar(50) DEFAULT NULL,
   `CountryName` varchar(20) DEFAULT NULL,
   `StateName` varchar(25) DEFAULT NULL,
-  `StateCode` varchar(2) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `StateCode` varchar(2) DEFAULT NULL,
+  `EmailAddress` varchar(50) DEFAULT NULL,
+  `CountryFlag` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`InstitutionId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
 
 -- Dumping structure for table NSF.Investigator
 CREATE TABLE IF NOT EXISTS `Investigator` (
-  `AwardID` int(11) NOT NULL,
+  `InvestigatorId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `FirstName` varchar(50) DEFAULT NULL,
   `LastName` varchar(50) DEFAULT NULL,
   `EmailAddress` varchar(100) DEFAULT NULL,
   `StartDate` date DEFAULT NULL,
   `EndDate` date DEFAULT NULL,
-  `RoleCode` char(1) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `RoleCode` char(1) DEFAULT NULL,
+  `UM_Prefix` varchar(50) DEFAULT NULL,
+  `UM_GivenName` varchar(50) DEFAULT NULL,
+  `UM_OtherName` varchar(50) DEFAULT NULL,
+  `UM_FamilyName` varchar(50) DEFAULT NULL,
+  `UM_Suffix` varchar(50) DEFAULT NULL,
+  `UM_Corrected_EmailAddress` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`InvestigatorId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
 
 -- Dumping structure for table NSF.ProgramElement
 CREATE TABLE IF NOT EXISTS `ProgramElement` (
-  `AwardID` int(11) NOT NULL,
+  `ProgramElementId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `Code` char(4) DEFAULT NULL,
-  `Text` varchar(50) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `Text` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`ProgramElementId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
 
 -- Dumping structure for table NSF.ProgramReference
 CREATE TABLE IF NOT EXISTS `ProgramReference` (
-  `AwardID` int(11) NOT NULL,
+  `ProgramReferenceId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AwardId` varchar(10) NOT NULL,
   `Code` char(4) DEFAULT NULL,
-  `Text` varchar(50) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `Text` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`ProgramReferenceId`),
+  KEY `AwardId` (`AwardId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

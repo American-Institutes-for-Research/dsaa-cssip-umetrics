@@ -14,18 +14,19 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `CollapsePersonsCrawler`
+-- Table structure for table `DatabaseStatisticsRun`
 --
 
-DROP TABLE IF EXISTS `CollapsePersonsCrawler`;
+DROP TABLE IF EXISTS `DatabaseStatisticsRun`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CollapsePersonsCrawler` (
-  `PersonId` int(10) unsigned NOT NULL COMMENT 'The Id of the Person who was crawled.',
-  `CrawledDateTime` datetime NOT NULL COMMENT 'When the Person was crawled.',
-  PRIMARY KEY (`PersonId`),
-  UNIQUE KEY `ix_CollapsePersonsCrawler_CrawledDateTime_PersonId` (`CrawledDateTime`,`PersonId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Used by the collapse_persons crawler to track what''s been crawled.';
+CREATE TABLE `DatabaseStatisticsRun` (
+  `DatabaseStatisticsRunId` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique identifier for this table',
+  `AsOf` datetime DEFAULT NULL COMMENT 'The date-time when this run was started',
+  `DatabaseName` varchar(100) DEFAULT NULL COMMENT 'The name of the database for this run',
+  `Description` varchar(250) DEFAULT NULL COMMENT 'A user-supplied description for this run',
+  PRIMARY KEY (`DatabaseStatisticsRunId`)
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8 COMMENT='Use this for relating all database statistics in BasicColumnStatistics, EnumeratedStatistics, and GroupByStatistics into one group so they can be compared over time.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
