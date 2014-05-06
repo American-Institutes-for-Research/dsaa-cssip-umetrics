@@ -12,16 +12,17 @@ import mysql.connector as mySQL
 import argparse
 import getpass
 import datetime
-sys.path.append("..\..\..\parse_names")
-import name_parser
+sys.path.append("..\..\..\correct_email")
+import email_corrector
 
 # Build the argument list for this. Sure, some of these could be put into a config file, but when it comes to
 # credentials I prefer to not have them in a config file but rather as commandline arguments - sometimes
 # config files get checked in with the credentials still in them.
-arg_parser = argparse.ArgumentParser(description="Parses the names in the NSF database into component parts and"
-                                                 " stores them back into the database.")
+arg_parser = argparse.ArgumentParser(description="Correct email addresses in the ResearchGov database by ensuring they"
+                                                 " meet rather broad pattern constraints.")
 arg_parser.add_argument(dest="host", action="store", help="MySQL host string. E.g. www.example.com or 123.123.123.123")
-arg_parser.add_argument(dest="database", action="store", help="The name of the NSF database.")
+arg_parser.add_argument(dest="database", action="store", help="The name of the database that you want to collect "
+                                                              "statistics for.")
 arg_parser.add_argument(dest="user", action="store", help="MySQL user name.")
 arg_parser.add_argument("-p", "--password", dest="password", metavar="password", action="store",
                         help="The password for the MySQL user. If not provided, then you will be prompted for it.")
@@ -38,60 +39,29 @@ else:
 # Connect to the database.
 read_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
                          port=args.port)
-read_cursor = read_cnx.cursor()
+read_cursor = read_cnx.cursor(buffered=True)
 write_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
                           port=args.port)
 write_cursor = write_cnx.cursor()
 
-# Parse out the program officer name in the Award table
-query_string = "select AwardPKID, ProgramOfficer from Award a"\
-    " where ProgramOfficer is not null and ProgramOfficer <> 'name not available';"
+query_string = "select AwardId, PDPIEmail, ProgramOfficerEmail from Award"\
+    " where PDPIEmail is not null or ProgramOfficerEmail is not null;"
 read_cursor.execute(query_string)
 
 num_rows_read = 0
 print(datetime.datetime.now(), num_rows_read)
 
-for (AwardPKId, FullName) in read_cursor:
-    name_components = name_parser.parse_name(name_parser.NameFormat.CITESEERX, FullName)
-    if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
-            or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
-            or (name_components.Suffix is not None) or (name_components.NickName is not None):
-        query_string = "UPDATE Award SET UM_ProgramOfficer_Prefix=%s, UM_ProgramOfficer_GivenName=%s," \
-                       " UM_ProgramOfficer_OtherName=%s, UM_ProgramOfficer_FamilyName=%s, UM_ProgramOfficer_Suffix=%s" \
-                       " WHERE AwardPKId=%s;"
-        write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
-                                            name_components.OtherName, name_components.FamilyName,
-                                            name_components.Suffix, AwardPKId))
+# This is barfing after about 17000-21000 iterations. Maybe need to read everything in and then do the writes.
+
+for (AwardId, pdpiEmail, poEmail) in read_cursor:
+    corrected_pdpi_email_address = email_corrector.email_corrector(pdpiEmail)
+    corrected_po_email_address = email_corrector.email_corrector(poEmail)
+    if (corrected_pdpi_email_address is not None) or (corrected_po_email_address is not None):
+        query_string = "UPDATE Award SET UM_PDPIEmail_Corrected=%s, UM_ProgramOfficerEmail_Corrected=%s " \
+                       "WHERE AwardId=%s;"
+        write_cursor.execute(query_string, (corrected_pdpi_email_address, corrected_po_email_address, AwardId))
     num_rows_read += 1
-    if divmod(num_rows_read, 10000)[1] == 0:
-        print(datetime.datetime.now(), num_rows_read)
-        write_cnx.commit()
 
-write_cnx.commit()
-
-# Parse out the investigator name from the Investigator table. Note that we will concatenate the first and last
-# names prior to parsing for new components.
-query_string = "select InvestigatorId, FirstName, LastName from Investigator"\
-    " where LastName <> 'data not available';"
-read_cursor.execute(query_string)
-
-num_rows_read = 0
-print(datetime.datetime.now(), num_rows_read)
-
-for (InvestigatorId, FirstName, LastName) in read_cursor:
-    full_name = FirstName if FirstName else ""
-    full_name = full_name + " " + LastName if LastName else ""
-    name_components = name_parser.parse_name(name_parser.NameFormat.CITESEERX, full_name)
-    if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
-            or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
-            or (name_components.Suffix is not None) or (name_components.NickName is not None):
-        query_string = "UPDATE Investigator SET UM_Prefix=%s, UM_GivenName=%s," \
-                       " UM_OtherName=%s, UM_FamilyName=%s, UM_Suffix=%s" \
-                       " WHERE InvestigatorId=%s;"
-        write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
-                                            name_components.OtherName, name_components.FamilyName,
-                                            name_components.Suffix, InvestigatorId))
-    num_rows_read += 1
     if divmod(num_rows_read, 10000)[1] == 0:
         print(datetime.datetime.now(), num_rows_read)
         write_cnx.commit()
@@ -102,3 +72,4 @@ write_cursor.close()
 write_cnx.close()
 read_cursor.close()
 read_cnx.close()
+

@@ -72,22 +72,24 @@ if args.config_file is not None:
     # Get all entries in the enumerated columns section. Then we'll iterate through those. Each entry in this sections
     # will have a key value which will be the table name, and the value will be a comma-delimited list of column
     # names.
-    enumerated_tables = config["CALCULATESTATS_ENUMERATEDCOLUMNS"]
-    for table in enumerated_tables:
-        for column in config["CALCULATESTATS_ENUMERATEDCOLUMNS"][table].split(","):
-            print("Calling CalculateEnumeratedStatistics for " + table + "." + column.strip())
-            cursor.callproc("CalculateEnumeratedStatistics", (database_statistics_run_id, args.database,
-                                                              table, column.strip()))
-    connection.commit()
+    if config.has_section("CALCULATESTATS_ENUMERATEDCOLUMNS"):
+        enumerated_tables = config["CALCULATESTATS_ENUMERATEDCOLUMNS"]
+        for table in enumerated_tables:
+            for column in config["CALCULATESTATS_ENUMERATEDCOLUMNS"][table].split(","):
+                print("Calling CalculateEnumeratedStatistics for " + table + "." + column.strip())
+                cursor.callproc("CalculateEnumeratedStatistics", (database_statistics_run_id, args.database,
+                                                                  table, column.strip()))
+        connection.commit()
 
     # Ditto now for the groupby section.
-    groupby_tables = config["CALCULATESTATS_GROUPBY"]
-    for table in groupby_tables:
-        for column in config["CALCULATESTATS_GROUPBY"][table].split(","):
-            print("Calling CalculateGroupByStatistics for " + table + "." + column.strip())
-            cursor.callproc("CalculateGroupByStatistics", (database_statistics_run_id, args.database,
-                                                           table, column.strip()))
-    connection.commit()
+    if config.has_section("CALCULATESTATS_GROUPBY"):
+        groupby_tables = config["CALCULATESTATS_GROUPBY"]
+        for table in groupby_tables:
+            for column in config["CALCULATESTATS_GROUPBY"][table].split(","):
+                print("Calling CalculateGroupByStatistics for " + table + "." + column.strip())
+                cursor.callproc("CalculateGroupByStatistics", (database_statistics_run_id, args.database,
+                                                               table, column.strip()))
+        connection.commit()
 
 # Clean up and go away.
 cursor.close()

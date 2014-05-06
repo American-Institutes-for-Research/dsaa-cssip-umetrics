@@ -1,28 +1,45 @@
--- --------------------------------------------------------
--- Host:                         mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com
--- Server version:               5.6.13-log - MySQL Community Server (GPL)
--- Server OS:                    Linux
--- HeidiSQL Version:             8.1.0.4545
--- --------------------------------------------------------
+-- MySQL dump 10.13  Distrib 5.6.13, for Win32 (x86)
+--
+-- Host: mysql-1.c4cgr75mzpo7.us-east-1.rds.amazonaws.com    Database: ResearchGov
+-- ------------------------------------------------------
+-- Server version 5.6.13-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Dumping database structure for ResearchGov
-CREATE DATABASE IF NOT EXISTS `ResearchGov` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+--
+-- Current Database: `ResearchGov`
+--
+
+/*!40000 DROP DATABASE IF EXISTS `ResearchGov`*/;
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `ResearchGov` /*!40100 DEFAULT CHARACTER SET utf8 */;
+
 USE `ResearchGov`;
 
+--
+-- Table structure for table `Award`
+--
 
--- Dumping structure for table ResearchGov.Award
-CREATE TABLE IF NOT EXISTS `Award` (
+DROP TABLE IF EXISTS `Award`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Award` (
+  `AwardId` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Awardee` varchar(300) DEFAULT NULL,
   `DoingBusinessAsName` varchar(300) DEFAULT NULL,
   `PDPIName` varchar(50) DEFAULT NULL,
   `PDPIPhone` varchar(20) DEFAULT NULL,
   `PDPIEmail` varchar(100) DEFAULT NULL,
-  `CoPDsCoPIs` varchar(200) DEFAULT NULL,
+  `CoPDsCoPIs` varchar(300) DEFAULT NULL,
   `AwardDate` date DEFAULT NULL,
   `EstimatedTotalAwardAmount` decimal(13,2) DEFAULT NULL,
   `FundsObligatedToDate` decimal(13,2) DEFAULT NULL,
@@ -58,12 +75,33 @@ CREATE TABLE IF NOT EXISTS `Award` (
   `PrimaryCountry` varchar(10) DEFAULT NULL,
   `PrimaryCongressionalDistrict` varchar(10) DEFAULT NULL,
   `AbstractAtTimeOfAward` text,
-  `PublicationsProducedAsAResultsOfThisResearch` text,
+  `PublicationsProducedAsAResultOfThisResearch` text,
   `PublicationsProducedAsConferenceProceedings` text,
-  `ProjectOutcomesReport` text
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_general_ci COMMENT='Relatively raw grant award data downloaded from Research.gov';
+  `ProjectOutcomesReport` text,
+  `UM_PDPIName_Prefix` varchar(50) DEFAULT NULL,
+  `UM_PDPIName_GivenName` varchar(50) DEFAULT NULL,
+  `UM_PDPIName_OtherName` varchar(50) DEFAULT NULL,
+  `UM_PDPIName_FamilyName` varchar(50) DEFAULT NULL,
+  `UM_PDPIName_Suffix` varchar(50) DEFAULT NULL,
+  `UM_PDPIEmail_Corrected` varchar(100) DEFAULT NULL,
+  `UM_ProgramOfficerName_Prefix` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficerName_GivenName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficerName_OtherName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficerName_FamilyName` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficerName_Suffix` varchar(50) DEFAULT NULL,
+  `UM_ProgramOfficerEmail_Corrected` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`AwardId`),
+  KEY `FederalAwardIDNumber` (`FederalAwardIDNumber`)
+) ENGINE=MyISAM AUTO_INCREMENT=271518 DEFAULT CHARSET=utf8 COMMENT='Relatively raw grant award data downloaded from Research.gov';
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
--- Data exporting was unselected.
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed

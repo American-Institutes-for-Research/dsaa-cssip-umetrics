@@ -24,32 +24,33 @@ def email_corrector(email):
     is_valid = False
     corrected_email = email
 
-    # If it is already valid coming in, then leave everything alone and go to the next one,
-    # unless it has a blank in it (we want to process to remove that blank)
-    if (email_validation.valid_email_address(corrected_email)) and (" " not in corrected_email):
-        is_valid = True
-    else:
-        # First get rid of all invalid characters.
-        corrected_email = "".join(c for c in corrected_email if c in _ValidEmailCharacters).strip()
-        corrected_email = corrected_email.replace(" @", "@")
+    if email is not None:
+        # If it is already valid coming in, then leave everything alone and go to the next one,
+        # unless it has a blank in it (we want to process to remove that blank)
+        if (email_validation.valid_email_address(corrected_email)) and (" " not in corrected_email):
+            is_valid = True
+        else:
+            # First get rid of all invalid characters.
+            corrected_email = "".join(c for c in corrected_email if c in _ValidEmailCharacters).strip()
+            corrected_email = corrected_email.replace(" @", "@")
 
-        # Go through each space-delimited word and check for validity
-        space_separated = corrected_email.split(" ")
-        for one_word in space_separated:
-            one_word = one_word.strip(".").strip(",").strip("(").strip(")").strip("#").strip("[").strip("]")\
-                .strip("{").strip("}").strip("%")
-            if email_validation.valid_email_address(one_word):
-                corrected_email = one_word
-                is_valid = True
-                break
+            # Go through each space-delimited word and check for validity
+            space_separated = corrected_email.split(" ")
+            for one_word in space_separated:
+                one_word = one_word.strip(".").strip(",").strip("(").strip(")").strip("#").strip("[").strip("]")\
+                    .strip("{").strip("}").strip("%")
+                if email_validation.valid_email_address(one_word):
+                    corrected_email = one_word
+                    is_valid = True
+                    break
 
-        if not is_valid:
-            # Try parsing it and keep if valid.
-            parsed_email = parseaddr(corrected_email)
-            if parsed_email[1] != "":
-                corrected_email = parsed_email[1].strip(".").strip(",").strip("(").strip(")").strip("#")\
-                    .strip("[").strip("]").strip("{").strip("}").strip("%")
-            is_valid = email_validation.valid_email_address(corrected_email)
+            if not is_valid:
+                # Try parsing it and keep if valid.
+                parsed_email = parseaddr(corrected_email)
+                if parsed_email[1] != "":
+                    corrected_email = parsed_email[1].strip(".").strip(",").strip("(").strip(")").strip("#")\
+                        .strip("[").strip("]").strip("{").strip("}").strip("%")
+                is_valid = email_validation.valid_email_address(corrected_email)
 
     if not is_valid:
         corrected_email = None

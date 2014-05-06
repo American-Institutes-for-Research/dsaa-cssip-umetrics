@@ -40,11 +40,12 @@ def parse_name(name_format, name_string):
 
     components = NameComponents(Prefix=None, FamilyName=None, GivenName=None, OtherName=None,
                                 Suffix=None, NickName=None)
-    name_string = name_string.replace("&nbsp;", " ")
-    if name_format == NameFormat.EXPORTER:
-        components = _parse_name_for_exporter(name_string)
-    elif name_format == NameFormat.CITESEERX:
-        components = _parse_name_for_citeseerx(name_string)
+    if name_string is not None:
+        name_string = name_string.replace("&nbsp;", " ")
+        if name_format == NameFormat.EXPORTER:
+            components = _parse_name_for_exporter(name_string)
+        elif name_format == NameFormat.CITESEERX:
+            components = _parse_name_for_citeseerx(name_string)
     return components
 
 
