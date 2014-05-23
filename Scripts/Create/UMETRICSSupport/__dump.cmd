@@ -4,7 +4,7 @@ setlocal
 
 set _mysqldump_path=C:\Program Files (x86)\MySQL\MySQL Workbench 6.0 CE\
 
-set _mysql_username=mysqladmin
+set _mysql_username=
 set _mysql_password=
 set _mysql_host=
 set _mysql_database=UMETRICSSupport

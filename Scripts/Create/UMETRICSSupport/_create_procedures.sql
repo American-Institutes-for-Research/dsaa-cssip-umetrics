@@ -113,6 +113,8 @@ BEGIN
 			else
 				set @stmt = 'insert into BasicColumnStatistics (DatabaseStatisticsRunId, DatabaseName, TableName, ColumnName, DataType,
 									RowCount, NotNullCount, DistinctCount)
+								select %database_statistics_run_id%, "%t_schema%", "%t_name%", "%c_name%", "%d_type%", count(*), count(%t_name%.%c_name%),
+									count(distinct %t_name%.%c_name%)
 									from %t_schema%.%t_name%;';
 		end case;
 		if @stmt <> '' then
