@@ -46,6 +46,8 @@ else:
 
 # Get all XML files in directories names YYYY
 files = glob.glob(os.path.join(args.rootPath, "[0-9][0-9][0-9][0-9]\*.xml"))
+
+# This historical files do not apply when updating the database 
 # Get all XML files in the Historical directory. This directory has awards prior to 1976.
 files.extend(glob.glob(os.path.join(args.rootPath, "historical\*.xml")))
 
@@ -63,13 +65,14 @@ programReferenceSQL = get_sql("InsertProgramReference.sql")
 connection = mySQL.connect(host=args.host, port=args.port, user=args.user, passwd=password, db=args.database)
 cursor = connection.cursor()
 
+# This Next Bit is for A. Populating a new Db or B. Testing this code 
 # Clear out all of our destination tables.
-cursor.execute("truncate table NSF_Award")
-cursor.execute("truncate table NSF_FOAInformation")
-cursor.execute("truncate table NSF_Institution")
-cursor.execute("truncate table NSF_Investigator")
-cursor.execute("truncate table NSF_ProgramElement")
-cursor.execute("truncate table NSF_ProgramReference")
+# cursor.execute("truncate table NSF_Award")
+# cursor.execute("truncate table NSF_FOAInformation")
+# cursor.execute("truncate table NSF_Institution")
+# cursor.execute("truncate table NSF_Investigator")
+# cursor.execute("truncate table NSF_ProgramElement")
+# cursor.execute("truncate table NSF_ProgramReference")
 
 
 # Suck in each XML file and dump it into the database.
