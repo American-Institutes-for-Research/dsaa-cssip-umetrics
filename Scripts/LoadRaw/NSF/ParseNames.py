@@ -8,7 +8,7 @@
 ################################################################################
 
 import sys
-import mysql.connector as mySQL
+import MySQLdb as mySQL
 import argparse
 import getpass
 import datetime
@@ -36,15 +36,15 @@ else:
     password = args.password
 
 # Connect to the database.
-read_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+read_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                          port=args.port)
 read_cursor = read_cnx.cursor()
-write_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+write_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                           port=args.port)
 write_cursor = write_cnx.cursor()
 
 # Parse out the program officer name in the Award table
-query_string = "select AwardPKID, ProgramOfficer from Award a"\
+query_string = "select AwardPKID, ProgramOfficer from NSF_Award a"\
     " where ProgramOfficer is not null and ProgramOfficer <> 'name not available';"
 read_cursor.execute(query_string)
 
@@ -56,7 +56,7 @@ for (AwardPKId, FullName) in read_cursor:
     if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
             or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
             or (name_components.Suffix is not None) or (name_components.NickName is not None):
-        query_string = "UPDATE Award SET UM_ProgramOfficer_Prefix=%s, UM_ProgramOfficer_GivenName=%s," \
+        query_string = "UPDATE NSF_Award SET UM_ProgramOfficer_Prefix=%s, UM_ProgramOfficer_GivenName=%s," \
                        " UM_ProgramOfficer_OtherName=%s, UM_ProgramOfficer_FamilyName=%s, UM_ProgramOfficer_Suffix=%s" \
                        " WHERE AwardPKId=%s;"
         write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,
@@ -71,7 +71,7 @@ write_cnx.commit()
 
 # Parse out the investigator name from the Investigator table. Note that we will concatenate the first and last
 # names prior to parsing for new components.
-query_string = "select InvestigatorId, FirstName, LastName from Investigator"\
+query_string = "select InvestigatorId, FirstName, LastName from NSF_Investigator"\
     " where LastName <> 'data not available';"
 read_cursor.execute(query_string)
 
@@ -85,7 +85,7 @@ for (InvestigatorId, FirstName, LastName) in read_cursor:
     if (name_components.Prefix is not None) or (name_components.GivenName is not None)\
             or (name_components.OtherName is not None) or (name_components.FamilyName is not None)\
             or (name_components.Suffix is not None) or (name_components.NickName is not None):
-        query_string = "UPDATE Investigator SET UM_Prefix=%s, UM_GivenName=%s," \
+        query_string = "UPDATE NSF_Investigator SET UM_Prefix=%s, UM_GivenName=%s," \
                        " UM_OtherName=%s, UM_FamilyName=%s, UM_Suffix=%s" \
                        " WHERE InvestigatorId=%s;"
         write_cursor.execute(query_string, (name_components.Prefix, name_components.GivenName,

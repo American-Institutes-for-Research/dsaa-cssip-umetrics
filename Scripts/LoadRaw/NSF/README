@@ -1,0 +1,92 @@
+READ ME 
+
+This Document was Written By Ren C'deBaca
+1/19/2016 
+
+File: Location: UMETRICS\Scripts\LoadRaw\NSF
+Files:
+
+
+SQL Files
+---------
+InsertAward
+InsertForaInfomation
+InsertInstatutuion
+InsertInvestigator
+InsertProgramElement
+InsertProgramReference
+
+Python Files
+------------ 
+CorrectEmails
+NSFImporter
+ParseNames 
+
+
+
+These are the steps to update the Database:
+
+1. Run NSFImporter
+	- This will will collect xml file from a rootpath
+	- It will use the SQL file mentioned abouve to inject the new dataelements into the database 
+
+2. Run CorrectEmails
+	- Does exactly like it says and corrects the emails to be formated better 
+
+3. Run ParseNames
+	- Takes the names in the file and parses then so mwe have first, last, suffix, prefex, ect 
+
+
+Before you Run this code make sure the following is done:
+
+1. Know where your xml files for each year are saved into a directory where each year is a folder with the name as the year, ie 2016, 2015. this path is your root path parameter 
+2. Make sure the table names in the SQL files abouve match the tables in your database 
+
+
+NSFImporter
+-----------
+
+Run this from the command line with the following arguments 
+host database username rootpath
+
+You will then be prompted for your password
+
+example > python NSFImporter.py 12.345.67.890 DataBaseName myusername C:/xml_files
+
+This code will take a few minutes to run so in that time you can go to lunch, grab coffee, if Ren C'deBaca works in your building, bring her coffee too. 
+
+
+CorrectEmails
+-----------
+
+Run this from the command line with the following arguments 
+host database username 
+
+You will then be prompted for your password
+
+example > python NSFImporter.py 12.345.67.890 DataBaseName myusername 
+
+
+ParseNames
+-----------
+
+Run this from the command line with the following arguments 
+host database username 
+
+You will then be prompted for your password
+
+example > python NSFImporter.py 12.345.67.890 DataBaseName myusername 
+
+
+
+And This is a Cat:
+     /\__/\
+    /`    '\
+  === 0  0 ===
+    \  --  /
+   /        \
+  /          \
+ |            |
+  \  ||  ||  /
+   \_oo__oo_/#######o
+

@@ -10,7 +10,8 @@
 import os
 import glob
 import xml.etree.ElementTree as elementTree
-import mysql.connector as mySQL
+#import mysql.connector as mySQL
+import MySQLdb as mySQL
 import argparse
 import getpass
 
@@ -59,16 +60,16 @@ programElementSQL = get_sql("InsertProgramElement.sql")
 programReferenceSQL = get_sql("InsertProgramReference.sql")
 
 # Connect to the database.
-connection = mySQL.connect(host=args.host, port=args.port, user=args.user, password=password, database=args.database)
+connection = mySQL.connect(host=args.host, port=args.port, user=args.user, passwd=password, db=args.database)
 cursor = connection.cursor()
 
 # Clear out all of our destination tables.
-cursor.execute("truncate table Award")
-cursor.execute("truncate table FOAInformation")
-cursor.execute("truncate table Institution")
-cursor.execute("truncate table Investigator")
-cursor.execute("truncate table ProgramElement")
-cursor.execute("truncate table ProgramReference")
+cursor.execute("truncate table NSF_Award")
+cursor.execute("truncate table NSF_FOAInformation")
+cursor.execute("truncate table NSF_Institution")
+cursor.execute("truncate table NSF_Investigator")
+cursor.execute("truncate table NSF_ProgramElement")
+cursor.execute("truncate table NSF_ProgramReference")
 
 
 # Suck in each XML file and dump it into the database.
@@ -134,6 +135,7 @@ for file in files:
         "AwardID": awardIDElement.text,
         "IsHistoricalAward": isHistoricalAwardElement.text if isHistoricalAwardElement is not None else None
     }
+
 
     cursor.execute(awardSQL, data)
 

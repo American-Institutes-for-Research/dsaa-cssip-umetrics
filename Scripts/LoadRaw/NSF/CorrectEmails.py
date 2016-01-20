@@ -8,7 +8,7 @@
 ################################################################################
 
 import sys
-import mysql.connector as mySQL
+import MySQLdb as mySQL
 import argparse
 import getpass
 import datetime
@@ -37,14 +37,14 @@ else:
     password = args.password
 
 # Connect to the database.
-read_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+read_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                          port=args.port)
 read_cursor = read_cnx.cursor()
-write_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+write_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                           port=args.port)
 write_cursor = write_cnx.cursor()
 
-query_string = "select InvestigatorId, EmailAddress from Investigator"\
+query_string = "select InvestigatorId, EmailAddress from NSF_Investigator"\
     " where EmailAddress is not null;"
 read_cursor.execute(query_string)
 
@@ -54,7 +54,7 @@ print(datetime.datetime.now(), num_rows_read)
 for (InvestigatorId, EmailAddress) in read_cursor:
     corrected_email_address = email_corrector.email_corrector(EmailAddress)
     if corrected_email_address is not None:
-        query_string = "UPDATE Investigator SET UM_Corrected_EmailAddress=%s WHERE InvestigatorId=%s;"
+        query_string = "UPDATE NSF_Investigator SET UM_Corrected_EmailAddress=%s WHERE InvestigatorId=%s;"
         write_cursor.execute(query_string, (corrected_email_address, InvestigatorId))
     num_rows_read += 1
 

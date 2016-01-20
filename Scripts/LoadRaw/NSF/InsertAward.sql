@@ -7,7 +7,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
-insert into Award
+insert into NSF_Award
 (
     AwardTitle,
     AwardEffectiveDate,
@@ -31,8 +31,8 @@ insert into Award
     IsHistoricalAward
 ) values (
     %(AwardTitle)s,
-    str_to_date(%(AwardEffectiveDate)s, '%m/%d/%Y'),
-    str_to_date(%(AwardExpirationDate)s, '%m/%d/%Y'),
+    str_to_date(%(AwardEffectiveDate)s, '%%m/%%d/%%Y'),
+    str_to_date(%(AwardExpirationDate)s, '%%m/%%d/%%Y'),
     %(AwardAmount)s,
     %(AwardInstrument)s,
     %(AwardInstrumentCode)s,
@@ -45,9 +45,10 @@ insert into Award
     %(DivisionCode)s,
     %(ProgramOfficer)s,
     %(AbstractNarration)s,
-    str_to_date(%(MinAmdLetterDate)s, '%m/%d/%Y'),
-    str_to_date(%(MaxAmdLetterDate)s, '%m/%d/%Y'),
+    str_to_date(%(MinAmdLetterDate)s, '%%m/%%d/%%Y'),
+    str_to_date(%(MaxAmdLetterDate)s, '%%m/%%d/%%Y'),
     %(ARRAAmount)s,
     %(AwardID)s,
     %(IsHistoricalAward)s
-)
+ )
+
