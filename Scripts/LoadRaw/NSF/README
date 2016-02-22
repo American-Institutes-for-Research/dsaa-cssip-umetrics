@@ -1,6 +1,6 @@
 READ ME 
 
-This Document was Written By Ren C'deBaca
+This Document was Written,
 1/19/2016 
 
 File: Location: UMETRICS\Scripts\LoadRaw\NSF
@@ -53,7 +53,7 @@ You will then be prompted for your password
 
 example > python NSFImporter.py 12.345.67.890 DataBaseName myusername C:/xml_files
 
-This code will take a few minutes to run so in that time you can go to lunch, grab coffee, if Ren C'deBaca works in your building, bring her coffee too. 
+This code will take a few minutes to run so in that time you can go to lunch, grab coffee, ect. 
 
 
 CorrectEmails
@@ -78,15 +78,4 @@ You will then be prompted for your password
 example > python NSFImporter.py 12.345.67.890 DataBaseName myusername 
 
 
-
-And This is a Cat:
-     /\__/\
-    /`    '\
-  === 0  0 ===
-    \  --  /
-   /        \
-  /          \
- |            |
-  \  ||  ||  /
-   \_oo__oo_/#######o
 
