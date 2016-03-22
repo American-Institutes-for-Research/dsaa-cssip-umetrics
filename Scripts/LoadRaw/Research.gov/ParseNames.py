@@ -8,7 +8,9 @@
 ################################################################################
 
 import sys
-import mysql.connector as mySQL
+#import mysql.connector as mySQL
+import pymysql as mySQL
+import argparse
 import argparse
 import getpass
 import datetime
@@ -17,7 +19,7 @@ import name_parser
 
 # Build the argument list for this. Sure, some of these could be put into a config file, but when it comes to
 # credentials I prefer to not have them in a config file but rather as commandline arguments - sometimes
-# config files get checked in with the credentials still in them.
+# config files get checked in with the credentials still in them.r
 arg_parser = argparse.ArgumentParser(description="Parses the names in the ResearchGov database into component parts and"
                                                  " stores them back into the database.")
 arg_parser.add_argument(dest="host", action="store", help="MySQL host string. E.g. www.example.com or 123.123.123.123")
@@ -36,15 +38,18 @@ else:
     password = args.password
 
 # Connect to the database.
-read_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+read_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                          port=args.port)
-read_cursor = read_cnx.cursor(buffered=True)
-write_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+
+read_cursor = read_cnx.cursor()
+write_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                           port=args.port)
 write_cursor = write_cnx.cursor()
 
+
+
 # Parse out the program officer name in the Award table
-query_string = "select AwardId, PDPIName, ProgramOfficerName from Award a"\
+query_string = "select AwardId, PDPIName, ProgramOfficerName from rg_award a"\
     " where PDPIName is not null or ProgramOfficerName is not null;"
 read_cursor.execute(query_string)
 
@@ -60,7 +65,7 @@ for (AwardId, PDPIFullName, POFullname) in read_cursor:
             or (po_name_components.Prefix is not None) or (po_name_components.GivenName is not None)\
             or (po_name_components.OtherName is not None) or (po_name_components.FamilyName is not None)\
             or (po_name_components.Suffix is not None) or (po_name_components.NickName is not None):
-        query_string = "UPDATE Award SET UM_PDPIName_Prefix=%s, UM_PDPIName_GivenName=%s," \
+        query_string = "UPDATE rg_award SET UM_PDPIName_Prefix=%s, UM_PDPIName_GivenName=%s," \
                        " UM_PDPIName_OtherName=%s, UM_PDPIName_FamilyName=%s, UM_PDPIName_Suffix=%s,"\
                        " UM_ProgramOfficerName_Prefix=%s, UM_ProgramOfficerName_GivenName=%s, "\
                        " UM_ProgramOfficerName_OtherName=%s, UM_ProgramOfficerName_FamilyName=%s, "\

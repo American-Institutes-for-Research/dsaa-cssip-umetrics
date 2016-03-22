@@ -10,7 +10,8 @@
 import os
 import glob
 import xml.etree.ElementTree as elementTree
-import mysql.connector as mySQL
+#import mysql.connector as mySQL
+import pymysql as mySQL
 import argparse
 import getpass
 
@@ -53,11 +54,18 @@ fileCount = len(files)
 awardSQL = get_sql("InsertAward.sql")
 
 # Connect to the database.
-connection = mySQL.connect(host=args.host, port=args.port, user=args.user, password=password, database=args.database)
+connection = mySQL.connect(host=args.host, port=args.port, user=args.user, passwd=password, db=args.database)
 cursor = connection.cursor()
 
+# Set up utf8 encoding
+# connection.set_character_set('utf8')
+# cursor.execute('SET NAMES utf8;')
+# cursor.execute('SET CHARACTER SET utf8;')
+# cursor.execute('SET character_set_connection=utf8;')
+
 # Clear out all of our destination tables.
-cursor.execute("truncate table Award")
+# This line is Good for Testing - Removeing For Right Now 
+# cursor.execute("truncate table RG_Award")
 
 # Suck in each XML file and dump it into the database.
 counter = 0
@@ -76,8 +84,8 @@ for file in files:
         awardDateElement = awardElement.find("AwardDate")
         estimatedTotalAwardAmountElement = awardElement.find("EstimatedTotalAwardAmount")
         fundsObligatedToDateElement = awardElement.find("FundsObligatedtoDate")
-        awardStartDateElement = awardElement.find("AwardStartDate")
-        awardExpirationDateElement = awardElement.find("AwardExpirationDate")
+        awardStartDateElement = awardElement.find("StartDate")
+        awardExpirationDateElement = awardElement.find("EndDate")
         transactionTypeElement = awardElement.find("TransactionType")
         agencyElement = awardElement.find("Agency")
         awardingAgencyCodeElement = awardElement.find("AwardingAgencyCode")
@@ -172,3 +180,5 @@ for file in files:
 connection.commit()
 cursor.close()
 connection.close()
+
+print "COMPLETE"

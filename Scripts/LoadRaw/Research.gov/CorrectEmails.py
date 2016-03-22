@@ -8,7 +8,8 @@
 ################################################################################
 
 import sys
-import mysql.connector as mySQL
+#import mysql.connector as mySQL
+import pymysql as mySQL
 import argparse
 import getpass
 import datetime
@@ -37,14 +38,14 @@ else:
     password = args.password
 
 # Connect to the database.
-read_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+read_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                          port=args.port)
-read_cursor = read_cnx.cursor(buffered=True)
-write_cnx = mySQL.connect(user=args.user, password=password, database=args.database, host=args.host,
+read_cursor = read_cnx.cursor() #read_cnx.cursor(buffered=True)
+write_cnx = mySQL.connect(user=args.user, passwd=password, db=args.database, host=args.host,
                           port=args.port)
 write_cursor = write_cnx.cursor()
 
-query_string = "select AwardId, PDPIEmail, ProgramOfficerEmail from Award"\
+query_string = "select AwardId, PDPIEmail, ProgramOfficerEmail from rg_award"\
     " where PDPIEmail is not null or ProgramOfficerEmail is not null;"
 read_cursor.execute(query_string)
 
@@ -57,7 +58,7 @@ for (AwardId, pdpiEmail, poEmail) in read_cursor:
     corrected_pdpi_email_address = email_corrector.email_corrector(pdpiEmail)
     corrected_po_email_address = email_corrector.email_corrector(poEmail)
     if (corrected_pdpi_email_address is not None) or (corrected_po_email_address is not None):
-        query_string = "UPDATE Award SET UM_PDPIEmail_Corrected=%s, UM_ProgramOfficerEmail_Corrected=%s " \
+        query_string = "UPDATE rg_award SET UM_PDPIEmail_Corrected=%s, UM_ProgramOfficerEmail_Corrected=%s " \
                        "WHERE AwardId=%s;"
         write_cursor.execute(query_string, (corrected_pdpi_email_address, corrected_po_email_address, AwardId))
     num_rows_read += 1
