@@ -1,0 +1,75 @@
+READ ME 
+
+This Document was Written 1/19/2016 
+
+File: Location: UMETRICS\Scripts\LoadRaw\Research.gov
+Files:
+
+
+SQL Files
+---------
+InsertAward
+
+
+Python Files
+------------ 
+ImportAwards
+CorrectEmails
+ParseNames 
+
+
+
+These are the steps to update the Database:
+
+1. Run ImportAwards
+	- This will will collect xml file from a rootpath
+	- It will use the SQL file mentioned abouve to inject the new dataelements into the database 
+
+2. Run CorrectEmails
+	- Does exactly like it says and corrects the emails to be formated better 
+
+3. Run ParseNames
+	- Takes the names in the file and parses then so mwe have first, last, suffix, prefex, ect 
+
+
+Before you Run this code make sure the following is done:
+
+1. Know where your xml files for each year are saved. Ther should all be in the same directory.
+2. Make sure the table names in the SQL files abouve match the tables in your database 
+
+
+ImportAwards
+-----------
+
+Run this from the command line with the following arguments 
+host database username rootpath
+
+You will then be prompted for your password
+
+example > python ImportAwards.py 12.345.67.890 DataBaseName myusername C:/xml_files
+
+This code will take a few minutes to run so in that time you can go to lunch, grab coffee, ect.
+
+
+CorrectEmails
+-----------
+
+Run this from the command line with the following arguments 
+host database username 
+
+You will then be prompted for your password
+
+example > python NSFImporter.py 12.345.67.890 DataBaseName myusername 
+
+
+ParseNames
+-----------
+
+Run this from the command line with the following arguments 
+host database username 
+
+You will then be prompted for your password
+
+example > python NSFImporter.py 12.345.67.890 DataBaseName myusername 
+
+
